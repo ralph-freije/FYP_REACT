@@ -131,15 +131,20 @@ export default function Login() {
 
         <div className="social-row">
 
-          <button className="social-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24">
-              <path
-                fill="#EA4335"
-                d="M12 10.2v3.6h5.1c-.2 1.2-1.4 3.5-5.1 3.5-3.1 0-5.6-2.6-5.6-5.8s2.5-5.8 5.6-5.8c1.8 0 3 .8 3.7 1.5l2.5-2.4C16.7 3.3 14.6 2.5 12 2.5 6.8 2.5 2.6 6.8 2.6 12s4.2 9.5 9.4 9.5c5.4 0 8.9-3.8 8.9-9.1 0-.6-.1-1-.1-1.2H12z"
-              />
-            </svg>
-            Google
-          </button>
+         <button
+  className="social-btn"
+  onClick={() =>
+    window.location.href = "http://localhost:8000/api/auth/google"
+  }
+>
+  <svg width="18" height="18" viewBox="0 0 24 24">
+    <path
+      fill="#EA4335"
+      d="M12 10.2v3.6h5.1c-.2 1.2-1.4 3.5-5.1 3.5-3.1 0-5.6-2.6-5.6-5.8s2.5-5.8 5.6-5.8c1.8 0 3 .8 3.7 1.5l2.5-2.4C16.7 3.3 14.6 2.5 12 2.5 6.8 2.5 2.6 6.8 2.6 12s4.2 9.5 9.4 9.5c5.4 0 8.9-3.8 8.9-9.1 0-.6-.1-1-.1-1.2H12z"
+    />
+  </svg>
+  Google
+</button>
 
           <button className="social-btn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="black">
