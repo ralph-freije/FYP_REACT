@@ -4,6 +4,7 @@ import Register from "../pages/Register";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
 import OAuthSuccess from "../pages/OAuthSuccess";
+import SettingsPage from "../pages/SettingsPage";
 function AppRouter() {
   return (
     <BrowserRouter>
@@ -16,7 +17,8 @@ function AppRouter() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-<Route path="/oauth-success" element={<OAuthSuccess />} />
+        <Route path="/oauth-success" element={<OAuthSuccess />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </BrowserRouter>
   );
