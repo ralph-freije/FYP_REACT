@@ -5,12 +5,15 @@ import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
 import OAuthSuccess from "../pages/OAuthSuccess";
 import SettingsPage from "../pages/SettingsPage";
+import ProtectedRoute from "../components/ProtectedRoute";
+import Dashboard from "../pages/Dashboard";
+// (you will create this later)
+
 function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* Default route redirects to login */}
         <Route path="/" element={<Navigate to="/login" />} />
 
         <Route path="/login" element={<Login />} />
@@ -18,7 +21,26 @@ function AppRouter() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/oauth-success" element={<OAuthSuccess />} />
-        <Route path="/settings" element={<SettingsPage />} />
+<Route path="/dashboard" element={<Dashboard />} />
+        {/* 🔐 PROTECTED ROUTES */}
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
       </Routes>
     </BrowserRouter>
   );

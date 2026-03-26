@@ -1,13 +1,14 @@
 .auth-wrapper {
   min-height: 100vh;
   background: linear-gradient(135deg, #102a43, #1c3f70);
+
   display: flex;
+  flex-direction: column; /* 🔥 KEY CHANGE */
   align-items: center;
   justify-content: center;
-  position: relative;
+
   font-family: system-ui, sans-serif;
 }
-
 .auth-logo {
   position: absolute;
   top: 25px;
@@ -37,7 +38,6 @@
   border-radius: 20px;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
 }
-
 .auth-header {
   text-align: center;
   margin-bottom: 30px;
@@ -135,10 +135,9 @@
 .submit-btn:hover {
   background: #4b942a;
 }
-
 .divider {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   font-size: 12px;
   color: #94a3b8;
   position: relative;
@@ -165,7 +164,7 @@
 .social-row {
   display: flex;
   gap: 15px;
-  margin-bottom: 25px;
+  margin-bottom: 12px;
 }
 
 .social-btn {
@@ -192,8 +191,9 @@
   text-align: center;
   font-size: 14px;
   color: #475569;
-}
 
+  margin-top: 8px; /* 🔥 tighter */
+}
 .join-link {
   color: #55a630;
   font-weight: 600;
@@ -201,12 +201,15 @@
 }
 
 .bottom-text {
-  position: absolute;
-  bottom: 25px;
+  margin-top: 40px; /* spacing from card */
+
   color: rgba(255,255,255,0.6);
   font-size: 12px;
+
   display: flex;
+  justify-content: center;
   gap: 30px;
+
   text-transform: uppercase;
 }
 .error-box {
@@ -226,4 +229,12 @@
   font-size: 14px;
   margin-bottom: 15px;
   text-align: center;
+}
+@media (max-width: 600px) {
+  .bottom-text {
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+    white-space: normal; /* allow wrap on small screens */
+  }
 }

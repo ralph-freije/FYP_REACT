@@ -13,13 +13,16 @@ color:#6b7280;
 margin-bottom:25px;
 }
 
+/* CARD IMPROVED */
 .card{
 background:white;
 padding:25px;
-border-radius:12px;
+border-radius:16px;
 margin-bottom:25px;
+box-shadow:0 8px 20px rgba(0,0,0,0.04);
 }
 
+/* AVATAR */
 .avatar-upload{
 display:flex;
 align-items:center;
@@ -32,38 +35,84 @@ width:70px;
 height:70px;
 border-radius:50%;
 object-fit:cover;
+border:2px solid #e5e7eb;
+transition:0.2s;
 }
 
+.profile-pic:hover{
+opacity:0.8;
+}
+
+/* BUTTON */
 .upload-btn{
 background:#10b981;
 color:white;
 padding:6px 12px;
-border-radius:6px;
+border-radius:8px;
 cursor:pointer;
 font-size:13px;
+transition:0.2s;
 }
 
+.upload-btn:hover{
+background:#059669;
+}
+
+/* INPUT */
 input{
 width:100%;
 padding:10px;
-border-radius:6px;
+border-radius:8px;
 border:1px solid #ddd;
 margin-top:5px;
+transition:0.2s;
 }
 
+input:focus{
+outline:none;
+border-color:#10b981;
+}
+
+/* TOGGLE ROW */
 .toggle{
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:10px 0;
+padding:14px 0;
+border-bottom:1px solid #f1f5f9;
 }
 
-.toggle input{
+/* SWITCH (NEW) */
+.switch{
+width:45px;
+height:24px;
+background:#e5e7eb;
+border-radius:50px;
+position:relative;
+cursor:pointer;
+transition:0.3s;
+}
+
+.switch.active{
+background:#10b981;
+}
+
+.switch .dot{
 width:18px;
 height:18px;
-cursor:pointer;
+background:white;
+border-radius:50%;
+position:absolute;
+top:3px;
+left:4px;
+transition:0.3s;
 }
 
+.switch.active .dot{
+transform:translateX(20px);
+}
+
+/* BUTTONS */
 .actions{
 display:flex;
 justify-content:flex-end;
@@ -74,20 +123,24 @@ margin-top:20px;
 background:#10b981;
 border:none;
 color:white;
-padding:10px 20px;
-border-radius:8px;
+padding:10px 22px;
+border-radius:10px;
 cursor:pointer;
+transition:0.2s;
 }
 
 .save:hover{
 background:#059669;
+transform:translateY(-1px);
 }
 
+/* DANGER */
 .danger{
-background:#fee2e2;
+background:#fff5f5;
 padding:20px;
-border-radius:12px;
+border-radius:16px;
 margin-top:20px;
+border:1px solid #fee2e2;
 }
 
 .danger-buttons{
@@ -100,10 +153,11 @@ margin-top:10px;
 background:#10b981;
 border:none;
 padding:6px 14px;
-border-radius:6px;
+border-radius:8px;
 font-size:13px;
 color:white;
 cursor:pointer;
+transition:0.2s;
 }
 
 .logout-btn:hover{
@@ -114,10 +168,11 @@ background:#059669;
 background:#ef4444;
 border:none;
 padding:6px 14px;
-border-radius:6px;
+border-radius:8px;
 font-size:13px;
 color:white;
 cursor:pointer;
+transition:0.2s;
 }
 
 .delete-btn:hover{

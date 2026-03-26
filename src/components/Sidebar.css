@@ -6,7 +6,7 @@ color:white;
 display:flex;
 flex-direction:column;
 padding:25px 20px;
-position:fixed;
+  position: fixed;
 left:0;
 top:0;
 }
@@ -29,11 +29,6 @@ justify-content:center;
 font-size:18px;
 }
 
-.logo-text{
-display:flex;
-flex-direction:column;
-}
-
 .logo-title{
 font-weight:600;
 font-size:16px;
@@ -44,6 +39,7 @@ font-size:12px;
 opacity:.7;
 }
 
+/* MENU */
 .sidebar-menu{
 display:flex;
 flex-direction:column;
@@ -51,21 +47,26 @@ gap:12px;
 }
 
 .menu-item{
+display:flex;
+align-items:center;
+gap:10px;
 text-decoration:none;
 color:white;
 padding:10px 14px;
-border-radius:8px;
+border-radius:10px;
 transition:0.2s;
 }
 
 .menu-item:hover{
 background:#10b981;
+transform:translateX(3px);
 }
 
 .menu-item.active{
 background:#10b981;
 }
 
+/* PROFILE */
 .sidebar-profile{
 margin-top:auto;
 display:flex;

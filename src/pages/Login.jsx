@@ -23,10 +23,10 @@ export default function Login() {
 
     try {
       const data = await loginUser(email, password);
-
+console.log("LOGIN RESPONSE:", data);
       // Save token + user
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+ localStorage.setItem("token", data.data.token);
+localStorage.setItem("user", JSON.stringify(data.data.user));
 
       navigate("/dashboard");
 
@@ -124,7 +124,6 @@ export default function Login() {
           </button>
 
         </form>
-
         <div className="divider">
           <span>OR CONTINUE WITH</span>
         </div>
@@ -146,16 +145,12 @@ export default function Login() {
   Google
 </button>
 
-          <button className="social-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="black">
-              <path d="M16.365 1.43c0 1.14-.41 2.2-1.22 3.16-.83.98-1.84 1.55-3.03 1.45-.08-1.11.38-2.24 1.18-3.13.81-.93 2.05-1.63 3.07-1.48zM20.7 17.15c-.5 1.15-.75 1.66-1.39 2.64-.89 1.35-2.15 3.04-3.7 3.05-1.38.02-1.73-.89-3.61-.88-1.88.01-2.27.89-3.65.89-1.56 0-2.76-1.52-3.65-2.87-2.47-3.76-2.73-8.17-1.2-10.53 1.08-1.69 2.8-2.67 4.41-2.67 1.64 0 2.67.9 4.02.9 1.31 0 2.11-.9 4.01-.9 1.43 0 2.94.78 4.02 2.13-3.54 1.94-2.96 6.98.74 8.24z" />
-            </svg>
-            Apple
-          </button>
-
         </div>
+        
 
-        <div className="auth-footer">
+
+      </div>
+ <div className="auth-footer">
           Don’t have an account?
           <span 
   className="join-link"
@@ -165,13 +160,7 @@ export default function Login() {
 </span>
         </div>
 
-      </div>
-
-      <div className="bottom-text">
-        <span>Secure AI Insights</span>
-        <span>Carbon Neutral Platform</span>
-      </div>
-
     </div>
+    
   );
 }

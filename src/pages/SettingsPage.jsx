@@ -11,19 +11,28 @@ useEffect(()=>{
 
 const loadProfile = async()=>{
 
-const res = await getProfile();
-setProfile(res.data.user);
+try{
+  const res = await getProfile();
+  setProfile(res.data.user);
+}catch(err){
+  console.error(err);
 
+  // Only logout if UNAUTHORIZED
+  if (err.response?.status === 401) {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = "/login";
+  }
+}
 };
 
 loadProfile();
 
 },[]);
 
-if(!profile) return <p>Loading...</p>;
+if(!profile) return <p style={{padding:"40px"}}>Loading profile...</p>;
 
 const handleChange=(field,value)=>{
-
 setProfile({
 ...profile,
 profile:{
@@ -31,11 +40,9 @@ profile:{
 [field]:value
 }
 });
-
 };
 
 const handleAvatarUpload = async(e)=>{
-
 const file = e.target.files[0];
 
 const formData = new FormData();
@@ -45,22 +52,24 @@ await uploadAvatar(formData);
 
 const res = await getProfile();
 setProfile(res.data.user);
-
 };
 
 const saveProfile = async()=>{
-
 await updateProfile({
-
 name:profile.name,
 weekly_report:profile.profile?.weekly_report,
 sustainability_alerts:profile.profile?.sustainability_alerts,
 public_profile:profile.profile?.public_profile
-
 });
 
 alert("Profile updated");
+};
 
+// ✅ LOGOUT FIX
+const handleLogout = () => {
+  localStorage.clear();
+  sessionStorage.clear();
+  window.location.href = "/login";
 };
 
 return(
@@ -77,8 +86,6 @@ return(
 Manage your account preferences and climate impact visibility.
 </p>
 
-{/* ACCOUNT */}
-
 <div className="card">
 
 <h3>Account Information</h3>
@@ -91,39 +98,23 @@ className="profile-pic"
 />
 
 <label className="upload-btn">
-
 Upload Photo
-
-<input
-type="file"
-hidden
-onChange={handleAvatarUpload}
-/>
-
+<input type="file" hidden onChange={handleAvatarUpload}/>
 </label>
 
 </div>
 
 <div>
-
 <label>Name</label>
-
 <input
 value={profile.name}
 onChange={(e)=>setProfile({...profile,name:e.target.value})}
 />
-
 </div>
 
 <div>
-
 <label>Email Address</label>
-
-<input
-value={profile.email}
-readOnly
-/>
-
+<input value={profile.email} readOnly/>
 </div>
 
 </div>
@@ -135,32 +126,32 @@ readOnly
 <h3>Notification Preferences</h3>
 
 <div className="toggle">
-
 <div>
 <b>Weekly Impact Report</b>
 <p>Receive a summary every Monday.</p>
 </div>
 
-<input
-type="checkbox"
-checked={profile.profile?.weekly_report || false}
-onChange={(e)=>handleChange("weekly_report",e.target.checked)}
-/>
+<div 
+className={`switch ${profile.profile?.weekly_report ? "active" : ""}`}
+onClick={()=>handleChange("weekly_report",!profile.profile?.weekly_report)}
+>
+<div className="dot"></div>
+</div>
 
 </div>
 
 <div className="toggle">
-
 <div>
 <b>Sustainability Alerts</b>
 <p>Alerts when footprint exceeds target.</p>
 </div>
 
-<input
-type="checkbox"
-checked={profile.profile?.sustainability_alerts || false}
-onChange={(e)=>handleChange("sustainability_alerts",e.target.checked)}
-/>
+<div 
+className={`switch ${profile.profile?.sustainability_alerts ? "active" : ""}`}
+onClick={()=>handleChange("sustainability_alerts",!profile.profile?.sustainability_alerts)}
+>
+<div className="dot"></div>
+</div>
 
 </div>
 
@@ -179,37 +170,22 @@ onChange={(e)=>handleChange("sustainability_alerts",e.target.checked)}
 <p>Allow others to see achievements.</p>
 </div>
 
-<input
-type="checkbox"
-checked={profile.profile?.public_profile || false}
-onChange={(e)=>handleChange("public_profile",e.target.checked)}
-/>
-
+<div 
+className={`switch ${profile.profile?.public_profile ? "active" : ""}`}
+onClick={()=>handleChange("public_profile",!profile.profile?.public_profile)}
+>
+<div className="dot"></div>
 </div>
 
 </div>
 
-{/* THEME */}
-
-<div className="card">
-
-<h3>Theme</h3>
-
-<p>Theme customization will be available soon.</p>
-
 </div>
-
-{/* SAVE BUTTON */}
 
 <div className="actions">
-
 <button className="save" onClick={saveProfile}>
 Save Changes
 </button>
-
 </div>
-
-{/* ACCOUNT ACTIONS */}
 
 <div className="danger">
 
@@ -217,7 +193,7 @@ Save Changes
 
 <div className="danger-buttons">
 
-<button className="logout-btn">
+<button className="logout-btn" onClick={handleLogout}>
 Logout
 </button>
 
