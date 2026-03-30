@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { getProfile } from "../api/profileApi";
 import { FaHome, FaLeaf, FaCog, FaBell } from "react-icons/fa";
 import "./Sidebar.css";
+import { FaRunning } from "react-icons/fa";
+
 
 export default function Sidebar() {
   const [user, setUser] = useState(null);
@@ -59,6 +61,12 @@ export default function Sidebar() {
           className={`menu-item ${location.pathname === "/notifications" ? "active" : ""}`}
         >
           <FaBell /> Notifications
+        </Link>
+          <Link
+          to="/activity"
+          className={`menu-item ${location.pathname === "/activity" ? "active" : ""}`}
+        >
+          <FaRunning /> Activities
         </Link>
       </nav>
 

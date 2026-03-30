@@ -7,6 +7,7 @@ import OAuthSuccess from "../pages/OAuthSuccess";
 import SettingsPage from "../pages/SettingsPage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Dashboard from "../pages/Dashboard";
+import ActivityPage from "../pages/ActivityPage";
 // (you will create this later)
 
 function AppRouter() {
@@ -21,6 +22,7 @@ function AppRouter() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/oauth-success" element={<OAuthSuccess />} />
+        <Route path="/activity" element={<ActivityPage />} />
 <Route path="/dashboard" element={<Dashboard />} />
         {/* 🔐 PROTECTED ROUTES */}
         <Route
