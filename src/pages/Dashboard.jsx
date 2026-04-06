@@ -12,8 +12,26 @@ import {
 } from "react-icons/fa";
 import "./Dashboard.css";
 import { getMe } from "../api/authApi";
-
+import { useMemo } from "react";
+import {
+  Chart as ChartJS,
+  LineElement,
+  PointElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Line } from "react-chartjs-2";
 export default function Dashboard() {
+  ChartJS.register(
+  LineElement,
+  PointElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend
+);
   const [dashboard, setDashboard] = useState({
     total_carbon: 0,
     categories: {
@@ -23,17 +41,29 @@ export default function Dashboard() {
       shopping: 0,
     },
   });
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const chartData = [
     Number(dashboard.categories.transport),
     Number(dashboard.categories.diet),
     Number(dashboard.categories.energy),
     Number(dashboard.categories.shopping),
   ];
+  const trendData = {
+  labels: dashboard?.trend?.map((t) => t.date) || [],
+  datasets: [
+    {
+      label: "Carbon Emission",
+      data: dashboard?.trend?.map((t) => Number(t.carbon)) || [],
+      tension: 0.4,
+    },
+  ],
+};
   const goal = 15; // temporary monthly goal
 
+  const totalMonth = dashboard?.total_carbon?.month || 0;
+
   const percentage = Math.min(
-    Math.round((dashboard.total_carbon / goal) * 100),
+    Math.round((totalMonth / goal) * 100),
     100
   );
   const [loading, setLoading] = useState(true);
@@ -110,7 +140,7 @@ const navigate = useNavigate();
 
                 <div className="carbon-value">
                   <div className="carbon-number">
-                    <strong>{dashboard.total_carbon}</strong>{" "}
+                    <strong>{totalMonth.toFixed(2)}</strong>{" "}
                     <span>kg CO2e</span>
                   </div>
                   <div className="change-pill">
@@ -182,7 +212,22 @@ const navigate = useNavigate();
               <button className="goal-add-btn">+ Add New Goal</button>
             </div>
           </div>
+          <div className="stats">
+            <div className="stat-card">
+              <h4>Today</h4>
+              <p>{Number(dashboard?.total_carbon?.today || 0).toFixed(2)} kg</p>
+            </div>
 
+            <div className="stat-card">
+              <h4>This Week</h4>
+              <p>{Number(dashboard?.total_carbon?.week || 0).toFixed(2)} kg</p>
+            </div>
+
+            <div className="stat-card">
+              <h4>This Month</h4>
+              <p>{Number(dashboard?.total_carbon?.month || 0).toFixed(2)} kg</p>
+            </div>
+          </div>
           {/* STATS */}
           <div className="stats">
             <div className="stat-card">
@@ -259,6 +304,20 @@ const navigate = useNavigate();
             <button className="challenge-btn">Accept Challenge</button>
           </div>
         </div>
+        <div className="trend-card">
+  <h3>Carbon Trend (Last 7 Days)</h3>
+  <Line data={trendData} key={JSON.stringify(trendData)} />
+</div>
+<div className="recent-activities">
+  <h3>Recent Activity</h3>
+
+  {dashboard?.recent_activities?.map((item) => (
+    <div key={item.id} className="activity-row">
+      <span>{item.category}</span>
+      <strong>{Number(item.carbon_value).toFixed(2)} kg</strong>
+    </div>
+  ))}
+</div>
       </div>
     </div>
   );
