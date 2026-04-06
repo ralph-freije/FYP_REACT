@@ -3,6 +3,14 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import api from "../api/axios";
 import "./ActivityPage.css";
+import { useLocation } from "react-router-dom";
+
+const DIET_OPTIONS = [
+  { name: "Beef", emission: 2.5 },
+  { name: "Chicken", emission: 1.2 },
+  { name: "Vegetarian Meal", emission: 0.5 },
+  { name: "Vegan Meal", emission: 0.3 },
+];
 const VEHICLE_OPTIONS = [
   { name: "Electric Car (Tesla Model 3)", emission: 0.05, compareLabel: "vs Public Bus" },
   { name: "Hybrid Car (Toyota Prius)", emission: 0.08, compareLabel: "vs Public Bus" },
@@ -12,9 +20,22 @@ const VEHICLE_OPTIONS = [
   { name: "Train", emission: 0.03, compareLabel: "vs Public Bus" },
   { name: "Bicycle", emission: 0, compareLabel: "vs Public Bus" },
 ];
-
+const ENERGY_OPTIONS = [
+  { name: "Electricity", emission: 0.4 },
+  { name: "Solar", emission: 0.05 },
+  { name: "Gas", emission: 0.6 },
+];
+const SHOPPING_OPTIONS = [
+  { name: "Clothing", emission: 1.5 },
+  { name: "Electronics", emission: 3.0 },
+  { name: "Groceries", emission: 0.8 },
+];
 export default function ActivityPage() {
-  const [activeTab, setActiveTab] = useState("transport");
+  const location = useLocation();
+
+  const [activeTab, setActiveTab] = useState(
+    location.state?.category || "transport"
+  );
 
   return (
     <div className="dashboard-layout">
@@ -41,10 +62,21 @@ export default function ActivityPage() {
           </div>
 
           <div className="activity-card">
-            {activeTab === "transport" && <TransportForm />}
-            {activeTab === "diet" && <ComingSoon title="Diet" />}
-            {activeTab === "energy" && <ComingSoon title="Energy" />}
-            {activeTab === "shopping" && <ComingSoon title="Shopping" />}
+            {activeTab === "transport" && (
+              <TransportForm initialData={location.state?.data} />
+            )}
+
+            {activeTab === "diet" && (
+              <DietForm initialData={location.state?.data} />
+            )}
+
+            {activeTab === "energy" && (
+              <EnergyForm initialData={location.state?.data} />
+            )}
+
+            {activeTab === "shopping" && (
+              <ShoppingForm initialData={location.state?.data} />
+            )}
           </div>
 
           <div className="goals-section">
@@ -184,6 +216,14 @@ function TransportForm() {
     setOpen(false);
     setSaveError("");
   };
+  useEffect(() => {
+  if (initialData) {
+    setDistance(initialData.distance || 0);
+    setSearch(initialData.vehicle || "");
+    setCarpool(initialData.carpool || false);
+    setEcoMode(initialData.eco_mode || false);
+  }
+}, [initialData]);
 
   return (
     <div className="activity-layout">
@@ -228,28 +268,29 @@ function TransportForm() {
           )}
         </div>
 
-       <div className="distance-header">
-  <label className="field-label">Distance Traveled</label>
+        <div className="distance-header">
+          <label className="field-label">Distance Traveled</label>
 
-  <input
-    type="number"
-    min="0"
-    max="250"
-    value={distance}
-    onChange={(e) => {
-      let value = Number(e.target.value);
-      if (value > 250) value = 250;
-      if (value < 0) value = 0;
-      setDistance(value);
-    }}
-    className="distance-input"
-  />
-</div>
+          <input
+            type="number"
+            min="0"
+            max="250"
+            value={distance}
+            onChange={(e) => {
+              let value = Number(e.target.value);
+              if (value > 250) value = 250;
+              if (value < 0) value = 0;
+              setDistance(value);
+            }}
+            className="distance-input"
+          />
 
-<div className="slider-labels">
-  <span>0 km</span>
-  <span>250 km</span>
-</div>
+        </div>
+
+        <div className="slider-labels">
+          <span>0 km</span>
+          <span>250 km</span>
+        </div>
 
         <input
           className="distance-slider"
@@ -348,7 +389,338 @@ function TransportForm() {
     </div>
   );
 }
+function DietForm() {
+  const navigate = useNavigate();
+  const dropdownRef = useRef(null);
 
+  const [quantity, setQuantity] = useState(1);
+  const [food, setFood] = useState(DIET_OPTIONS[0]);
+  const [search, setSearch] = useState(DIET_OPTIONS[0].name);
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filtered = DIET_OPTIONS.filter((item) =>
+    item.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const carbon = (quantity * (food?.emission || 0)).toFixed(2);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+
+      await api.post("/auth/activity", {
+        category: "diet",
+        data: {
+          type: food?.name || search,
+          quantity: Number(quantity),
+          carbon_estimate: Number(carbon),
+        },
+      });
+
+      navigate("/dashboard?refresh=diet");
+    } catch (err) {
+      console.error(err);
+      setError("Failed to save diet activity");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="activity-layout">
+      {/* LEFT */}
+      <div className="activity-left">
+        <h3>Diet Details</h3>
+
+        <label className="field-label">Food Type</label>
+
+        <div className={`custom-select ${open ? "open" : ""}`} ref={dropdownRef}>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setOpen(true);
+            }}
+            onFocus={() => setOpen(true)}
+            className="vehicle-input"
+          />
+
+          {open && (
+            <div className="vehicle-dropdown">
+              {filtered.map((item) => (
+                <button
+                  key={item.name}
+                  className="option"
+                  onClick={() => {
+                    setFood(item);
+                    setSearch(item.name);
+                    setOpen(false);
+                  }}
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="distance-header">
+          <label className="field-label">Quantity</label>
+
+          <input
+            type="number"
+            value={quantity}
+            min="1"
+            onChange={(e) => setQuantity(Number(e.target.value))}
+            className="distance-input"
+          />
+        </div>
+      </div>
+
+      {/* RIGHT */}
+      <div className="activity-right">
+        <h3>Live Carbon Impact</h3>
+
+        <div className="impact-box">
+          <span>Estimated Emissions</span>
+          <h2>{carbon} kg CO2e</h2>
+        </div>
+
+        {error && <div className="error-message">{error}</div>}
+
+        <button className="btn-green" onClick={handleSave} disabled={saving}>
+          {saving ? "Saving..." : "Save Activity"}
+        </button>
+
+        <button className="btn-light">Cancel</button>
+      </div>
+    </div>
+  );
+}
+function EnergyForm() {
+  const navigate = useNavigate();
+  const dropdownRef = useRef(null);
+
+  const [usage, setUsage] = useState(10);
+  const [energy, setEnergy] = useState(ENERGY_OPTIONS[0]);
+  const [search, setSearch] = useState(ENERGY_OPTIONS[0].name);
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const filtered = ENERGY_OPTIONS.filter((item) =>
+    item.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const carbon = (usage * (energy?.emission || 0)).toFixed(2);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+
+      await api.post("/auth/activity", {
+        category: "energy",
+        data: {
+          type: energy?.name || search,
+          usage: Number(usage),
+          carbon_estimate: Number(carbon),
+        },
+      });
+
+      navigate("/dashboard?refresh=energy");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="activity-layout">
+      <div className="activity-left">
+        <h3>Energy Usage</h3>
+
+        <label className="field-label">Energy Source</label>
+
+        <div className={`custom-select ${open ? "open" : ""}`} ref={dropdownRef}>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setOpen(true);
+            }}
+            onFocus={() => setOpen(true)}
+            className="vehicle-input"
+          />
+
+          {open && (
+            <div className="vehicle-dropdown">
+              {filtered.map((item) => (
+                <button
+                  key={item.name}
+                  className="option"
+                  onClick={() => {
+                    setEnergy(item);
+                    setSearch(item.name);
+                    setOpen(false);
+                  }}
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="distance-header">
+          <label className="field-label">Usage (kWh)</label>
+
+          <input
+            type="number"
+            value={usage}
+            onChange={(e) => setUsage(Number(e.target.value))}
+            className="distance-input"
+          />
+        </div>
+      </div>
+
+      <div className="activity-right">
+        <h3>Live Carbon Impact</h3>
+
+        <div className="impact-box">
+          <span>Estimated Emissions</span>
+          <h2>{carbon} kg CO2e</h2>
+        </div>
+
+        <button className="btn-green" onClick={handleSave}>
+          {saving ? "Saving..." : "Save Activity"}
+        </button>
+
+        <button className="btn-light">Cancel</button>
+      </div>
+    </div>
+  );
+}
+function ShoppingForm() {
+  const navigate = useNavigate();
+  const dropdownRef = useRef(null);
+
+  const [amount, setAmount] = useState(1);
+  const [item, setItem] = useState(SHOPPING_OPTIONS[0]);
+  const [search, setSearch] = useState(SHOPPING_OPTIONS[0].name);
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const filtered = SHOPPING_OPTIONS.filter((i) =>
+    i.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const carbon = (amount * (item?.emission || 0)).toFixed(2);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+
+      await api.post("/auth/activity", {
+        category: "shopping",
+        data: {
+          type: item?.name || search,
+          amount: Number(amount),
+          carbon_estimate: Number(carbon),
+        },
+      });
+
+      navigate("/dashboard?refresh=shopping");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="activity-layout">
+      {/* LEFT */}
+      <div className="activity-left">
+        <h3>Shopping Details</h3>
+
+        <label className="field-label">Item Type</label>
+
+        <div className={`custom-select ${open ? "open" : ""}`} ref={dropdownRef}>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setOpen(true);
+            }}
+            onFocus={() => setOpen(true)}
+            className="vehicle-input"
+          />
+
+          {open && (
+            <div className="vehicle-dropdown">
+              {filtered.map((i) => (
+                <button
+                  key={i.name}
+                  className="option"
+                  onClick={() => {
+                    setItem(i);
+                    setSearch(i.name);
+                    setOpen(false);
+                  }}
+                >
+                  {i.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="distance-header">
+          <label className="field-label">Amount</label>
+
+          <input
+            type="number"
+            value={amount}
+            min="1"
+            onChange={(e) => setAmount(Number(e.target.value))}
+            className="distance-input"
+          />
+        </div>
+      </div>
+
+      {/* RIGHT */}
+      <div className="activity-right">
+        <h3>Live Carbon Impact</h3>
+
+        <div className="impact-box">
+          <span>Estimated Emissions</span>
+          <h2>{carbon} kg CO2e</h2>
+        </div>
+
+        <button className="btn-green" onClick={handleSave}>
+          {saving ? "Saving..." : "Save Activity"}
+        </button>
+
+        <button className="btn-light">Cancel</button>
+      </div>
+    </div>
+  );
+}
 function ComingSoon({ title }) {
   return (
     <div className="coming-soon">

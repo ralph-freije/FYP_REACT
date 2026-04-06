@@ -4,7 +4,7 @@ import { getProfile } from "../api/profileApi";
 import { FaHome, FaLeaf, FaCog, FaBell } from "react-icons/fa";
 import "./Sidebar.css";
 import { FaRunning } from "react-icons/fa";
-
+import { FaClock } from "react-icons/fa";
 
 export default function Sidebar() {
   const [user, setUser] = useState(null);
@@ -67,6 +67,12 @@ export default function Sidebar() {
           className={`menu-item ${location.pathname === "/activity" ? "active" : ""}`}
         >
           <FaRunning /> Activities
+        </Link>
+           <Link
+          to="/history"
+          className={`menu-item ${location.pathname === "/history" ? "active" : ""}`}
+        >
+          <FaClock /> History
         </Link>
       </nav>
 

@@ -8,7 +8,7 @@ import SettingsPage from "../pages/SettingsPage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Dashboard from "../pages/Dashboard";
 import ActivityPage from "../pages/ActivityPage";
-// (you will create this later)
+import ActivityHistory from "../pages/ActivityHistory";
 
 function AppRouter() {
   return (
@@ -23,6 +23,7 @@ function AppRouter() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/oauth-success" element={<OAuthSuccess />} />
         <Route path="/activity" element={<ActivityPage />} />
+        <Route path="/history" element={<ActivityHistory />} />
 <Route path="/dashboard" element={<Dashboard />} />
         {/* 🔐 PROTECTED ROUTES */}
         <Route
