@@ -8,44 +8,5 @@ font-family:'Inter',sans-serif;
 }
 
 body{
-background:#f8fafc;
-color:#1e293b;
-}
-
-/* Buttons */
-button {
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-/* Inputs */
-input {
-  transition: all 0.2s ease;
-}
-
-/* Headings */
-h1{
-  font-size:28px;
-  font-weight:600;
-}
-
-h3{
-  font-size:18px;
-  font-weight:600;
-}
-
-/* Text */
-p{
-  font-size:14px;
-  color:#64748b;
-}
-
-/* Scrollbar (nice UI touch) */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
+background:#f3f4f6;
 }

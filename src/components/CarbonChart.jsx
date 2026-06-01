@@ -18,12 +18,14 @@ const centerTextPlugin = {
     const centerX = width / 2;
     const centerY = height / 2;
 
+    const percentage = chart.config.options.plugins.centerText?.percentage || 0;
+
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
     ctx.font = "700 20px system-ui";
     ctx.fillStyle = "#0f172a";
-    ctx.fillText("75%", centerX, centerY - 8);
+    ctx.fillText(`${percentage}%`, centerX, centerY - 8);
 
     ctx.font = "600 10px system-ui";
     ctx.fillStyle = "#94a3b8";
@@ -33,13 +35,13 @@ const centerTextPlugin = {
   },
 };
 
-export default function CarbonChart() {
-  const data = useMemo(
+export default function CarbonChart({ data, percentage }) {
+  const chartData = useMemo(
     () => ({
       labels: ["Transport", "Diet", "Energy", "Shopping"],
       datasets: [
         {
-          data: [120, 80, 200, 60],
+          data: data,
           backgroundColor: ["#57b12d", "#2f8fdd", "#1f8b3d", "#dbe4ef"],
           borderWidth: 0,
           hoverOffset: 4,
@@ -48,7 +50,7 @@ export default function CarbonChart() {
         },
       ],
     }),
-    []
+    [data]
   );
 
   const options = useMemo(
@@ -72,10 +74,18 @@ export default function CarbonChart() {
   return (
     <div style={{ width: "190px", height: "190px" }}>
       <Doughnut
-        data={data}
-        options={options}
-        plugins={[centerTextPlugin]}
-      />
+  data={chartData}
+  options={{
+    ...options,
+    plugins: {
+      ...options.plugins,
+      centerText: {
+        percentage: percentage,
+      },
+    },
+  }}
+  plugins={[centerTextPlugin]}
+/>
     </div>
   );
 }
