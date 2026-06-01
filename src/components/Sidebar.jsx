@@ -5,11 +5,10 @@ import { FaHome, FaLeaf, FaCog, FaBell } from "react-icons/fa";
 import "./Sidebar.css";
 import { FaRunning } from "react-icons/fa";
 import { FaClock } from "react-icons/fa";
-
+import { FaChartBar } from "react-icons/fa";
 export default function Sidebar() {
   const [user, setUser] = useState(null);
   const location = useLocation();
-
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -74,6 +73,14 @@ export default function Sidebar() {
         >
           <FaClock /> History
         </Link>
+        {user?.role === "admin" && (
+  <Link
+    to="/admin"
+    className={`menu-item ${location.pathname === "/admin" ? "active" : ""}`}
+  >
+    <FaChartBar /> Admin Analytics
+  </Link>
+)}
       </nav>
 
       <div className="sidebar-profile">

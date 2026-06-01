@@ -9,7 +9,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import Dashboard from "../pages/Dashboard";
 import ActivityPage from "../pages/ActivityPage";
 import ActivityHistory from "../pages/ActivityHistory";
-
+import AdminPage from "../pages/AdminPage";
 function AppRouter() {
   return (
     <BrowserRouter>
@@ -24,7 +24,14 @@ function AppRouter() {
         <Route path="/oauth-success" element={<OAuthSuccess />} />
         <Route path="/activity" element={<ActivityPage />} />
         <Route path="/history" element={<ActivityHistory />} />
-<Route path="/dashboard" element={<Dashboard />} />
+        <Route
+  path="/admin"
+  element={
+    <ProtectedRoute adminOnly={true}>
+      <AdminPage />
+    </ProtectedRoute>
+  }
+/>
         {/* 🔐 PROTECTED ROUTES */}
         <Route
           path="/settings"

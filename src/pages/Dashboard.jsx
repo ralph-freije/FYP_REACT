@@ -23,6 +23,7 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import PageLoader from "../components/PageLoader";
 export default function Dashboard() {
   ChartJS.register(
   LineElement,
@@ -97,7 +98,7 @@ export default function Dashboard() {
   }, []);
 
   // ✅ FIXED LOADING (no duplicates)
-  if (loading) return <p style={{ padding: "40px" }}>Loading dashboard...</p>;
+if (loading) return <PageLoader text="Loading dashboard..." />;
   if (error) return <p style={{ padding: "40px", color: "red" }}>{error}</p>;
 
   return (
