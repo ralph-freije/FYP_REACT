@@ -5,8 +5,9 @@ import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
 import OAuthSuccess from "../pages/OAuthSuccess";
 import SettingsPage from "../pages/SettingsPage";
-import ProtectedRoute from "../components/ProtectedRoute";
 import Dashboard from "../pages/Dashboard";
+import AboutUs from "../pages/AboutUs";
+import ProtectedRoute from "../components/ProtectedRoute";
 // (you will create this later)
 
 function AppRouter() {
@@ -14,14 +15,14 @@ function AppRouter() {
     <BrowserRouter>
       <Routes>
 
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Navigate to="/about-us" />} />
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/oauth-success" element={<OAuthSuccess />} />
-<Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/about-us" element={<AboutUs />} />
         {/* 🔐 PROTECTED ROUTES */}
         <Route
           path="/settings"
