@@ -110,7 +110,7 @@ export default function ActivityPage() {
   );
 }
 
-function TransportForm() {
+function TransportForm({ initialData = {} }) {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
@@ -217,7 +217,7 @@ function TransportForm() {
     setSaveError("");
   };
   useEffect(() => {
-  if (initialData) {
+ if (Object.keys(initialData).length > 0) {
     setDistance(initialData.distance || 0);
     setSearch(initialData.vehicle || "");
     setCarpool(initialData.carpool || false);

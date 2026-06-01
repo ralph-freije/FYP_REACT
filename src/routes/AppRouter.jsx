@@ -8,6 +8,10 @@ import SettingsPage from "../pages/SettingsPage";
 import Dashboard from "../pages/Dashboard";
 import ActivityPage from "../pages/ActivityPage";
 import ActivityHistory from "../pages/ActivityHistory";
+import AdminPage from "../pages/AdminPage";
+import Communities from "../pages/Communities";
+import People from "../pages/People";
+import Messages from "../pages/Messages";
 import AboutUs from "../pages/AboutUs";
 import ProtectedRoute from "../components/ProtectedRoute";
 
@@ -24,7 +28,15 @@ function AppRouter() {
         <Route path="/oauth-success" element={<OAuthSuccess />} />
         <Route path="/about-us" element={<AboutUs />} />
 
-        {/* 🔐 PROTECTED ROUTES */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/activity"
           element={
@@ -44,6 +56,33 @@ function AppRouter() {
         />
 
         <Route
+          path="/communities"
+          element={
+            <ProtectedRoute>
+              <Communities />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/people"
+          element={
+            <ProtectedRoute>
+              <People />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <Messages />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/settings"
           element={
             <ProtectedRoute>
@@ -53,13 +92,15 @@ function AppRouter() {
         />
 
         <Route
-          path="/dashboard"
+          path="/admin"
           element={
-            <ProtectedRoute>
-              <Dashboard />
+            <ProtectedRoute adminOnly={true}>
+              <AdminPage />
             </ProtectedRoute>
           }
         />
+
+        <Route path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
     </BrowserRouter>
   );

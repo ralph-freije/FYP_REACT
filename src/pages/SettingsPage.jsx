@@ -1,214 +1,295 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
+import PageLoader from "../components/PageLoader";
 import { getProfile, updateProfile, uploadAvatar } from "../api/profileApi";
 import "./SettingsPage.css";
 
 export default function SettingsPage() {
+  const [profile, setProfile] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-const [profile,setProfile] = useState(null);
+  const getAvatarSrc = (src) => {
+    if (!src) return null;
 
-useEffect(()=>{
+    if (src.startsWith("http://") || src.startsWith("https://")) {
+      return src;
+    }
 
-const loadProfile = async()=>{
+    if (src.startsWith("/storage/")) {
+      return `http://127.0.0.1:8000${src}`;
+    }
 
-try{
-  const res = await getProfile();
-  setProfile(res.data.user);
-}catch(err){
-  console.error(err);
+    if (src.startsWith("storage/")) {
+      return `http://127.0.0.1:8000/${src}`;
+    }
 
-  // Only logout if UNAUTHORIZED
-  if (err.response?.status === 401) {
+    if (src.startsWith("avatars/")) {
+      return `http://127.0.0.1:8000/storage/${src}`;
+    }
+
+    return src;
+  };
+
+  const getInitials = () => {
+    if (!profile?.name) return "U";
+
+    return profile.name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  };
+
+  const loadProfile = async () => {
+    try {
+      const res = await getProfile();
+      setProfile(res.data.user);
+    } catch (err) {
+      console.error(err);
+
+      if (err.response?.status === 401) {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = "/login";
+      }
+    }
+  };
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  if (!profile) return <PageLoader text="Loading settings..." />;
+
+  const avatarSrc = getAvatarSrc(profile.profile?.profile_picture);
+
+  const handleChange = (field, value) => {
+    setProfile({
+      ...profile,
+      profile: {
+        ...profile.profile,
+        [field]: value,
+      },
+    });
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      setUploading(true);
+      const uploadRes = await uploadAvatar(formData);
+
+      setProfile({
+        ...profile,
+        profile: {
+          ...profile.profile,
+          profile_picture: uploadRes.data.avatar,
+        },
+      });
+
+      await loadProfile();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to upload photo.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const saveProfile = async () => {
+    try {
+      setSaving(true);
+
+      const res = await updateProfile({
+        name: profile.name,
+        weekly_report: profile.profile?.weekly_report,
+        sustainability_alerts: profile.profile?.sustainability_alerts,
+        public_profile: profile.profile?.public_profile,
+      });
+
+      setProfile(res.data.user);
+      alert("Profile updated");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save profile.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleLogout = () => {
     localStorage.clear();
     sessionStorage.clear();
     window.location.href = "/login";
-  }
-}
-};
+  };
 
-loadProfile();
+  return (
+    <div className="settings-layout">
+      <Sidebar />
 
-},[]);
+      <main className="settings-main">
+        <div className="settings-header">
+          <div>
+            <h1>Settings</h1>
+            <p>Manage your account preferences and climate impact visibility.</p>
+          </div>
+        </div>
 
-if(!profile) return <p style={{padding:"40px"}}>Loading profile...</p>;
+        <section className="settings-card">
+          <div className="settings-card-header">
+            <h3>Account Information</h3>
+            <p>Update your profile photo and personal information.</p>
+          </div>
 
-const handleChange=(field,value)=>{
-setProfile({
-...profile,
-profile:{
-...profile.profile,
-[field]:value
-}
-});
-};
+          <div className="avatar-upload">
+            {avatarSrc ? (
+              <img
+                src={avatarSrc}
+                className="profile-pic"
+                alt="Profile"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextSibling.style.display = "flex";
+                }}
+              />
+            ) : null}
 
-const handleAvatarUpload = async(e)=>{
-const file = e.target.files[0];
+            <div
+              className="profile-pic-fallback"
+              style={{ display: avatarSrc ? "none" : "flex" }}
+            >
+              {getInitials()}
+            </div>
 
-const formData = new FormData();
-formData.append("avatar",file);
+            <label className="upload-btn">
+              {uploading ? "Uploading..." : "Upload Photo"}
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                disabled={uploading}
+              />
+            </label>
+          </div>
 
-await uploadAvatar(formData);
+          <div className="settings-form-grid">
+            <div className="form-group">
+              <label>Name</label>
+              <input
+                value={profile.name || ""}
+                onChange={(e) =>
+                  setProfile({ ...profile, name: e.target.value })
+                }
+              />
+            </div>
 
-const res = await getProfile();
-setProfile(res.data.user);
-};
+            <div className="form-group">
+              <label>Email Address</label>
+              <input value={profile.email || ""} readOnly />
+            </div>
+          </div>
+        </section>
 
-const saveProfile = async()=>{
-await updateProfile({
-name:profile.name,
-weekly_report:profile.profile?.weekly_report,
-sustainability_alerts:profile.profile?.sustainability_alerts,
-public_profile:profile.profile?.public_profile
-});
+        <section className="settings-card">
+          <div className="settings-card-header">
+            <h3>Notification Preferences</h3>
+            <p>Control the sustainability notifications you receive.</p>
+          </div>
 
-alert("Profile updated");
-};
+          <div className="toggle">
+            <div>
+              <b>Weekly Impact Report</b>
+              <p>Receive a summary every Monday.</p>
+            </div>
 
-// ✅ LOGOUT FIX
-const handleLogout = () => {
-  localStorage.clear();
-  sessionStorage.clear();
-  window.location.href = "/login";
-};
+            <button
+              type="button"
+              className={`switch ${
+                profile.profile?.weekly_report ? "active" : ""
+              }`}
+              onClick={() =>
+                handleChange("weekly_report", !profile.profile?.weekly_report)
+              }
+            >
+              <span className="dot"></span>
+            </button>
+          </div>
 
-return(
+          <div className="toggle">
+            <div>
+              <b>Sustainability Alerts</b>
+              <p>Alerts when footprint exceeds target.</p>
+            </div>
 
-<div className="settings-layout">
+            <button
+              type="button"
+              className={`switch ${
+                profile.profile?.sustainability_alerts ? "active" : ""
+              }`}
+              onClick={() =>
+                handleChange(
+                  "sustainability_alerts",
+                  !profile.profile?.sustainability_alerts
+                )
+              }
+            >
+              <span className="dot"></span>
+            </button>
+          </div>
+        </section>
 
-<Sidebar/>
+        <section className="settings-card">
+          <div className="settings-card-header">
+            <h3>Privacy & Visibility</h3>
+            <p>Choose how your activity appears to other users.</p>
+          </div>
 
-<div className="settings-main">
+          <div className="toggle">
+            <div>
+              <b>Public Profile</b>
+              <p>Allow others to see achievements.</p>
+            </div>
 
-<h1>Settings</h1>
+            <button
+              type="button"
+              className={`switch ${
+                profile.profile?.public_profile ? "active" : ""
+              }`}
+              onClick={() =>
+                handleChange("public_profile", !profile.profile?.public_profile)
+              }
+            >
+              <span className="dot"></span>
+            </button>
+          </div>
+        </section>
 
-<p className="subtitle">
-Manage your account preferences and climate impact visibility.
-</p>
+        <section className="settings-actions-card">
+          <div>
+            <h3>Account Actions</h3>
+            <p>Save your updates or end your current session.</p>
+          </div>
 
-<div className="card">
+          <div className="settings-actions">
+            <button className="save-btn" onClick={saveProfile} disabled={saving}>
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
 
-<h3>Account Information</h3>
-
-<div className="avatar-upload">
-
-<img
-src={profile.profile?.profile_picture || "/default-avatar.png"}
-className="profile-pic"
-/>
-
-<label className="upload-btn">
-Upload Photo
-<input type="file" hidden onChange={handleAvatarUpload}/>
-</label>
-
-</div>
-
-<div>
-<label>Name</label>
-<input
-value={profile.name}
-onChange={(e)=>setProfile({...profile,name:e.target.value})}
-/>
-</div>
-
-<div>
-<label>Email Address</label>
-<input value={profile.email} readOnly/>
-</div>
-
-</div>
-
-{/* NOTIFICATIONS */}
-
-<div className="card">
-
-<h3>Notification Preferences</h3>
-
-<div className="toggle">
-<div>
-<b>Weekly Impact Report</b>
-<p>Receive a summary every Monday.</p>
-</div>
-
-<div 
-className={`switch ${profile.profile?.weekly_report ? "active" : ""}`}
-onClick={()=>handleChange("weekly_report",!profile.profile?.weekly_report)}
->
-<div className="dot"></div>
-</div>
-
-</div>
-
-<div className="toggle">
-<div>
-<b>Sustainability Alerts</b>
-<p>Alerts when footprint exceeds target.</p>
-</div>
-
-<div 
-className={`switch ${profile.profile?.sustainability_alerts ? "active" : ""}`}
-onClick={()=>handleChange("sustainability_alerts",!profile.profile?.sustainability_alerts)}
->
-<div className="dot"></div>
-</div>
-
-</div>
-
-</div>
-
-{/* PRIVACY */}
-
-<div className="card">
-
-<h3>Privacy & Visibility</h3>
-
-<div className="toggle">
-
-<div>
-<b>Public Profile</b>
-<p>Allow others to see achievements.</p>
-</div>
-
-<div 
-className={`switch ${profile.profile?.public_profile ? "active" : ""}`}
-onClick={()=>handleChange("public_profile",!profile.profile?.public_profile)}
->
-<div className="dot"></div>
-</div>
-
-</div>
-
-</div>
-
-<div className="actions">
-<button className="save" onClick={saveProfile}>
-Save Changes
-</button>
-</div>
-
-<div className="danger">
-
-<h3>Account Actions</h3>
-
-<div className="danger-buttons">
-
-<button className="logout-btn" onClick={handleLogout}>
-Logout
-</button>
-
-<button className="delete-btn">
-Delete Account
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-);
-
+            <button className="logout-btn" onClick={handleLogout}>
+              Logout
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
 }
