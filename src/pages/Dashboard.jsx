@@ -12,7 +12,6 @@ import {
 } from "react-icons/fa";
 import "./Dashboard.css";
 import { getMe } from "../api/authApi";
-import { useMemo } from "react";
 import {
   Chart as ChartJS,
   LineElement,
@@ -24,8 +23,8 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import PageLoader from "../components/PageLoader";
-export default function Dashboard() {
-  ChartJS.register(
+
+ChartJS.register(
   LineElement,
   PointElement,
   CategoryScale,
@@ -33,43 +32,100 @@ export default function Dashboard() {
   Tooltip,
   Legend
 );
+
+export default function Dashboard() {
   const [dashboard, setDashboard] = useState({
-    total_carbon: 0,
+    total_carbon: {
+      today: 0,
+      week: 0,
+      month: 0,
+      all: 0,
+    },
     categories: {
       transport: 0,
       diet: 0,
       energy: 0,
       shopping: 0,
     },
+    trend: [],
+    recent_activities: [],
+    goals: [],
   });
-  const navigate = useNavigate();
-  const chartData = [
-    Number(dashboard.categories.transport),
-    Number(dashboard.categories.diet),
-    Number(dashboard.categories.energy),
-    Number(dashboard.categories.shopping),
-  ];
-  const trendData = {
-  labels: dashboard?.trend?.map((t) => t.date) || [],
-  datasets: [
-    {
-      label: "Carbon Emission",
-      data: dashboard?.trend?.map((t) => Number(t.carbon)) || [],
-      tension: 0.4,
-    },
-  ],
-};
-  const goal = 15; // temporary monthly goal
 
-  const totalMonth = dashboard?.total_carbon?.month || 0;
-
-  const percentage = Math.min(
-    Math.round((totalMonth / goal) * 100),
-    100
-  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
+
+  const navigate = useNavigate();
+
+  const categories = dashboard?.categories || {
+    transport: 0,
+    diet: 0,
+    energy: 0,
+    shopping: 0,
+  };
+
+  const totals = dashboard?.total_carbon || {
+    today: 0,
+    week: 0,
+    month: 0,
+    all: 0,
+  };
+
+  const chartData = [
+    Number(categories.transport || 0),
+    Number(categories.diet || 0),
+    Number(categories.energy || 0),
+    Number(categories.shopping || 0),
+  ];
+
+  const trendData = {
+    labels: dashboard?.trend?.map((t) => t.date) || [],
+    datasets: [
+      {
+        label: "Carbon Emission",
+        data: dashboard?.trend?.map((t) => Number(t.carbon || 0)) || [],
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      },
+    ],
+  };
+
+  const trendOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return `${context.raw} kg CO2e`;
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function (value) {
+            return `${value} kg`;
+          },
+        },
+      },
+    },
+  };
+
+  const monthlyGoal = 15;
+  const totalMonth = Number(totals.month || 0);
+
+  const percentage = Math.min(
+    Math.round((totalMonth / monthlyGoal) * 100),
+    100
+  );
 
   useEffect(() => {
     const loadUser = async () => {
@@ -84,7 +140,24 @@ export default function Dashboard() {
     const loadDashboard = async () => {
       try {
         const res = await getDashboard();
-        setDashboard(res.data || {});
+
+        setDashboard({
+          total_carbon: {
+            today: Number(res.data?.total_carbon?.today || 0),
+            week: Number(res.data?.total_carbon?.week || 0),
+            month: Number(res.data?.total_carbon?.month || 0),
+            all: Number(res.data?.total_carbon?.all || 0),
+          },
+          categories: {
+            transport: Number(res.data?.categories?.transport || 0),
+            diet: Number(res.data?.categories?.diet || 0),
+            energy: Number(res.data?.categories?.energy || 0),
+            shopping: Number(res.data?.categories?.shopping || 0),
+          },
+          trend: res.data?.trend || [],
+          recent_activities: res.data?.recent_activities || [],
+          goals: res.data?.goals || [],
+        });
       } catch (err) {
         console.error(err);
         setError("Failed to load dashboard");
@@ -97,8 +170,7 @@ export default function Dashboard() {
     loadUser();
   }, []);
 
-  // ✅ FIXED LOADING (no duplicates)
-if (loading) return <PageLoader text="Loading dashboard..." />;
+  if (loading) return <PageLoader text="Loading dashboard..." />;
   if (error) return <p style={{ padding: "40px", color: "red" }}>{error}</p>;
 
   return (
@@ -107,12 +179,9 @@ if (loading) return <PageLoader text="Loading dashboard..." />;
 
       <div className="dashboard-main">
         <div className="dashboard-container">
-          {/* HEADER */}
           <div className="header">
             <div>
-              <h1>
-                Welcome back, {user?.name || "User"} 👋
-              </h1>
+              <h1>Welcome back, {user?.name || "User"} 👋</h1>
               <p>Here’s your sustainability impact this month.</p>
             </div>
 
@@ -127,9 +196,7 @@ if (loading) return <PageLoader text="Loading dashboard..." />;
             </div>
           </div>
 
-          {/* TOP GRID */}
           <div className="top-grid">
-            {/* MAIN CARD */}
             <div className="main-card">
               <div className="card-header">
                 <div>
@@ -144,58 +211,49 @@ if (loading) return <PageLoader text="Loading dashboard..." />;
                     <strong>{totalMonth.toFixed(2)}</strong>{" "}
                     <span>kg CO2e</span>
                   </div>
-                  <div className="change-pill">
-                    0% vs last month
-                  </div>
+                  <div className="change-pill">0% vs last month</div>
                 </div>
               </div>
 
-              {/* CHART */}
               <div className="chart-section">
                 <div className="chart-wrapper">
                   <CarbonChart data={chartData} percentage={percentage} />
                 </div>
 
-                {/* LEGEND */}
                 <div className="legend">
                   <div className="legend-item">
                     <span className="legend-dot dot-green"></span>
                     <span>Transport</span>
-                    <strong>
-                      {Number(dashboard.categories.transport).toFixed(2)} kg
-                    </strong>
+                    <strong>{Number(categories.transport || 0).toFixed(2)} kg</strong>
                   </div>
 
                   <div className="legend-item">
                     <span className="legend-dot dot-blue"></span>
                     <span>Diet</span>
-                    <strong>
-                      {Number(dashboard.categories.diet).toFixed(2)} kg
-                    </strong>
+                    <strong>{Number(categories.diet || 0).toFixed(2)} kg</strong>
                   </div>
 
                   <div className="legend-item">
                     <span className="legend-dot dot-gray"></span>
                     <span>Energy</span>
-                    <strong>
-                      {Number(dashboard.categories.energy).toFixed(2)} kg
-                    </strong>
+                    <strong>{Number(categories.energy || 0).toFixed(2)} kg</strong>
                   </div>
 
                   <div className="legend-item">
                     <span className="legend-dot dot-light"></span>
                     <span>Shopping</span>
-                    <strong>
-                      {Number(dashboard.categories.shopping).toFixed(2)} kg
-                    </strong>
+                    <strong>{Number(categories.shopping || 0).toFixed(2)} kg</strong>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* GOALS */}
             <div className="goals-card">
               <h3>Current Goals</h3>
+
+              {(dashboard.goals || []).length === 0 && (
+                <p className="empty-text">No active goals yet.</p>
+              )}
 
               {(dashboard.goals || []).map((goal, i) => (
                 <div className="goal" key={i}>
@@ -213,23 +271,24 @@ if (loading) return <PageLoader text="Loading dashboard..." />;
               <button className="goal-add-btn">+ Add New Goal</button>
             </div>
           </div>
-          <div className="stats">
+
+          <div className="stats summary-stats">
             <div className="stat-card">
               <h4>Today</h4>
-              <p>{Number(dashboard?.total_carbon?.today || 0).toFixed(2)} kg</p>
+              <p>{Number(totals.today || 0).toFixed(2)} kg</p>
             </div>
 
             <div className="stat-card">
               <h4>This Week</h4>
-              <p>{Number(dashboard?.total_carbon?.week || 0).toFixed(2)} kg</p>
+              <p>{Number(totals.week || 0).toFixed(2)} kg</p>
             </div>
 
             <div className="stat-card">
               <h4>This Month</h4>
-              <p>{Number(dashboard?.total_carbon?.month || 0).toFixed(2)} kg</p>
+              <p>{Number(totals.month || 0).toFixed(2)} kg</p>
             </div>
           </div>
-          {/* STATS */}
+
           <div className="stats">
             <div className="stat-card">
               <div className="stat-icon">
@@ -237,8 +296,7 @@ if (loading) return <PageLoader text="Loading dashboard..." />;
               </div>
               <h4>Transport</h4>
               <p>
-                {Number(dashboard.categories.transport).toFixed(2)}{" "}
-                <span>kg</span>
+                {Number(categories.transport || 0).toFixed(2)} <span>kg</span>
               </p>
               <small className="muted-text">Live data</small>
             </div>
@@ -249,8 +307,7 @@ if (loading) return <PageLoader text="Loading dashboard..." />;
               </div>
               <h4>Diet</h4>
               <p>
-                {Number(dashboard.categories.diet).toFixed(2)}{" "}
-                <span>kg</span>
+                {Number(categories.diet || 0).toFixed(2)} <span>kg</span>
               </p>
               <small className="muted-text">Live data</small>
             </div>
@@ -261,8 +318,7 @@ if (loading) return <PageLoader text="Loading dashboard..." />;
               </div>
               <h4>Energy</h4>
               <p>
-                {Number(dashboard.categories.energy).toFixed(2)}{" "}
-                <span>kg</span>
+                {Number(categories.energy || 0).toFixed(2)} <span>kg</span>
               </p>
               <small className="muted-text">Live data</small>
             </div>
@@ -273,14 +329,12 @@ if (loading) return <PageLoader text="Loading dashboard..." />;
               </div>
               <h4>Shopping</h4>
               <p>
-                {Number(dashboard.categories.shopping).toFixed(2)}{" "}
-                <span>kg</span>
+                {Number(categories.shopping || 0).toFixed(2)} <span>kg</span>
               </p>
               <small className="muted-text">Live data</small>
             </div>
           </div>
 
-          {/* AI TIP */}
           <div className="ai-tip">
             <div className="ai-tip-left">
               <div className="tip-icon">
@@ -304,21 +358,45 @@ if (loading) return <PageLoader text="Loading dashboard..." />;
 
             <button className="challenge-btn">Accept Challenge</button>
           </div>
-        </div>
-        <div className="trend-card">
-  <h3>Carbon Trend (Last 7 Days)</h3>
-  <Line data={trendData} key={JSON.stringify(trendData)} />
-</div>
-<div className="recent-activities">
-  <h3>Recent Activity</h3>
 
-  {dashboard?.recent_activities?.map((item) => (
-    <div key={item.id} className="activity-row">
-      <span>{item.category}</span>
-      <strong>{Number(item.carbon_value).toFixed(2)} kg</strong>
-    </div>
-  ))}
-</div>
+          <div className="dashboard-bottom-grid">
+            <div className="trend-card">
+              <div className="section-header">
+                <div>
+                  <h3>Carbon Trend</h3>
+                  <p>Last 7 days of tracked emissions</p>
+                </div>
+              </div>
+
+              <div className="line-chart-wrapper">
+                <Line data={trendData} options={trendOptions} />
+              </div>
+            </div>
+
+            <div className="recent-activities">
+              <div className="section-header">
+                <div>
+                  <h3>Recent Activity</h3>
+                  <p>Your latest logged actions</p>
+                </div>
+              </div>
+
+              {(dashboard?.recent_activities || []).length === 0 && (
+                <p className="empty-text">No activities logged yet.</p>
+              )}
+
+              {(dashboard?.recent_activities || []).map((item) => (
+                <div key={item.id} className="activity-row">
+                  <div>
+                    <span>{item.category || "Activity"}</span>
+                    <small>{item.created_at || "Today"}</small>
+                  </div>
+                  <strong>{Number(item.carbon_value || 0).toFixed(2)} kg</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

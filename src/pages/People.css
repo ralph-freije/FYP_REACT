@@ -1,0 +1,509 @@
+.people-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f3f7fb;
+}
+
+.people-main {
+  margin-left: 260px;
+  width: calc(100% - 260px);
+  min-height: 100vh;
+  padding: 28px;
+}
+
+.people-container {
+  width: 100%;
+}
+
+.people-header h1 {
+  color: #07162f;
+  font-size: 30px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.people-header p {
+  color: #55708f;
+  font-size: 14px;
+}
+
+.people-alert {
+  margin: 20px 0;
+  border-radius: 16px;
+  padding: 13px 16px;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.people-alert button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.people-alert.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.people-alert.success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.people-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin: 22px 0;
+}
+
+.people-stat-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.stat-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon.green {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.stat-icon.blue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.stat-icon.purple {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.people-stat-card strong {
+  display: block;
+  font-size: 26px;
+  color: #07162f;
+}
+
+.people-stat-card span {
+  color: #8292aa;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.people-content-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1.2fr;
+  gap: 22px;
+  align-items: start;
+}
+
+.people-list-card,
+.profile-preview-card {
+  background: #ffffff;
+  border-radius: 26px;
+  padding: 22px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+}
+
+.people-search {
+  height: 52px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 17px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.people-search svg {
+  color: #94a3b8;
+}
+
+.people-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.people-search button {
+  border: none;
+  background: #22c55e;
+  color: #ffffff;
+  border-radius: 13px;
+  padding: 10px 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.people-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.people-tabs button {
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.people-tabs button.active {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.people-list {
+  display: grid;
+  gap: 12px;
+}
+
+.person-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #e8eef5;
+  border-radius: 20px;
+  padding: 14px;
+  transition: 0.2s;
+}
+
+.person-card.selected {
+  border-color: #22c55e;
+  box-shadow: 0 12px 24px rgba(34, 197, 94, 0.12);
+}
+
+.person-main {
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.person-avatar,
+.profile-avatar-large {
+  border-radius: 50%;
+  background: #22c55e;
+  color: #ffffff;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.person-avatar {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+}
+
+.person-avatar img,
+.profile-avatar-large img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.person-avatar::after,
+.profile-avatar-large::after {
+  content: "";
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+}
+
+.person-avatar.active::after,
+.profile-avatar-large.active::after {
+  background: #22c55e;
+}
+
+.person-avatar.offline::after,
+.profile-avatar-large.offline::after {
+  background: #94a3b8;
+}
+
+.person-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.person-info strong {
+  color: #0f172a;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.person-info span {
+  color: #8192aa;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.person-info small {
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.active-text {
+  color: #16a34a !important;
+}
+
+.offline-text {
+  color: #94a3b8 !important;
+}
+
+.person-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mutual-badge,
+.follows-you-badge {
+  border-radius: 999px;
+  padding: 7px 9px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.mutual-badge {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.follows-you-badge {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.follow-action,
+.profile-follow-btn {
+  border: none;
+  background: #22c55e;
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 10px 13px;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.follow-action.following,
+.profile-follow-btn.following {
+  background: #eaf2ff;
+  color: #2563eb;
+}
+
+.profile-preview-card {
+  min-height: 560px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.profile-empty {
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #94a3b8;
+  text-align: center;
+  padding: 30px;
+}
+
+.profile-empty svg {
+  font-size: 42px;
+}
+
+.profile-empty h3 {
+  color: #0f172a;
+}
+
+.profile-cover {
+  height: 150px;
+  background: linear-gradient(135deg, #0f766e, #22c55e);
+  position: relative;
+}
+
+.profile-avatar-large {
+  width: 96px;
+  height: 96px;
+  position: absolute;
+  left: 28px;
+  bottom: -48px;
+  border: 4px solid #ffffff;
+  font-size: 30px;
+}
+
+.profile-info-panel {
+  padding: 60px 28px 20px;
+}
+
+.profile-info-panel h2 {
+  color: #07162f;
+  font-size: 26px;
+  margin-bottom: 4px;
+}
+
+.profile-info-panel p {
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.profile-status {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 900;
+  margin-bottom: 12px;
+}
+
+.profile-status.active {
+  color: #16a34a;
+}
+
+.profile-status.offline {
+  color: #94a3b8;
+}
+
+.profile-badge-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.profile-numbers {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  padding: 0 28px 22px;
+}
+
+.profile-numbers div {
+  background: #f8fafc;
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.profile-numbers strong {
+  display: block;
+  font-size: 24px;
+  color: #07162f;
+}
+
+.profile-numbers span {
+  color: #8192aa;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.achievement-section {
+  padding: 0 28px 28px;
+}
+
+.achievement-section h3 {
+  color: #07162f;
+  margin-bottom: 14px;
+}
+
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.achievement-card {
+  background: #f8fafc;
+  border-radius: 18px;
+  padding: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.achievement-card svg {
+  color: #22c55e;
+}
+
+.achievement-card strong {
+  color: #07162f;
+  font-size: 18px;
+}
+
+.achievement-card span {
+  color: #8192aa;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.empty-text {
+  color: #94a3b8;
+  font-size: 14px;
+  padding: 18px 0;
+}
+
+@media (max-width: 1100px) {
+  .people-content-grid,
+  .people-stats-grid,
+  .achievement-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .person-card {
+    grid-template-columns: 1fr;
+  }
+
+  .person-badges {
+    justify-content: flex-start;
+  }
+}
