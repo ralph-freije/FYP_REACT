@@ -1,6 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getProfile } from "../api/profileApi";
+import {
+  getNotifications,
+  getUnreadNotificationCount,
+} from "../api/notificationApi";
 import {
   FaHome,
   FaLeaf,
@@ -17,7 +21,9 @@ import "./Sidebar.css";
 
 export default function Sidebar() {
   const [user, setUser] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
+  const firstNotificationCheck = useRef(true);
 
   const getAvatarSrc = (src) => {
     if (!src) return "/default-avatar.png";
@@ -41,6 +47,55 @@ export default function Sidebar() {
     return src;
   };
 
+const showDesktopNotification = (notification) => {
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+  if (localStorage.getItem("ecotrack_desktop_notifications_enabled") !== "true") return;
+  if (!notification || !notification.id) return;
+
+  const desktopNotification = new Notification(notification.title || "EcoTrack", {
+    body: notification.message || "You have a new notification.",
+    icon: "/default-avatar.png",
+  });
+
+  desktopNotification.onclick = () => {
+    window.focus();
+
+    if (notification.data?.url) {
+      window.location.href = notification.data.url;
+    } else {
+      window.location.href = "/notifications";
+    }
+  };
+};
+
+  const loadUnreadCount = async () => {
+    try {
+      const res = await getUnreadNotificationCount();
+      setUnreadCount(res.unread_count || 0);
+    } catch (err) {
+      console.error("Failed to load unread notifications:", err);
+    }
+  };
+
+  const checkLatestNotification = async () => {
+    try {
+      const res = await getNotifications("unread");
+      const latest = res.data?.[0];
+
+      if (!latest) return;
+
+      if (firstNotificationCheck.current) {
+        firstNotificationCheck.current = false;
+        return;
+      }
+
+      showDesktopNotification(latest);
+    } catch (err) {
+      console.error("Failed to check latest notification:", err);
+    }
+  };
+
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -53,6 +108,18 @@ export default function Sidebar() {
 
     loadUser();
   }, []);
+
+  useEffect(() => {
+    loadUnreadCount();
+    checkLatestNotification();
+
+    const interval = setInterval(() => {
+      loadUnreadCount();
+      checkLatestNotification();
+    }, 20000);
+
+    return () => clearInterval(interval);
+  }, [user?.id]);
 
   return (
     <aside className="sidebar">
@@ -119,14 +186,32 @@ export default function Sidebar() {
         >
           <FaUserFriends /> People
         </Link>
+
         <Link
-  to="/messages"
-  className={`menu-item ${
-    location.pathname === "/messages" ? "active" : ""
-  }`}
->
-  <FaComments /> Messages
-</Link>
+          to="/messages"
+          className={`menu-item ${
+            location.pathname === "/messages" ? "active" : ""
+          }`}
+        >
+          <FaComments /> Messages
+        </Link>
+
+        <Link
+          to="/notifications"
+          className={`menu-item notification-menu-item ${
+            location.pathname === "/notifications" ? "active" : ""
+          }`}
+        >
+          <span className="menu-item-left">
+            <FaBell /> Notifications
+          </span>
+
+          {unreadCount > 0 && (
+            <span className="sidebar-notification-badge">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </Link>
 
         <Link
           to="/settings"
@@ -135,15 +220,6 @@ export default function Sidebar() {
           }`}
         >
           <FaCog /> Settings
-        </Link>
-
-        <Link
-          to="/notifications"
-          className={`menu-item ${
-            location.pathname === "/notifications" ? "active" : ""
-          }`}
-        >
-          <FaBell /> Notifications
         </Link>
 
         {user?.role === "admin" && (

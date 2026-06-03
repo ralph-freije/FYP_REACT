@@ -1708,3 +1708,92 @@ button:disabled {
   border-radius: 50%;
   object-fit: cover;
 }
+.communities-layout {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.communities-main {
+  width: calc(100% - 250px);
+  max-width: calc(100vw - 250px);
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.communities-container,
+.communities-top-grid,
+.communities-content-grid,
+.community-details-card,
+.details-main-grid,
+.chat-card,
+.messages-list {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.communities-content-grid {
+  grid-template-columns: minmax(320px, 390px) minmax(0, 1fr);
+}
+
+.details-main-grid {
+  grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr);
+  width: 100%;
+}
+
+.community-details-card {
+  overflow: hidden;
+}
+
+.chat-card {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.messages-list {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.message-bubble {
+  max-width: min(72%, 420px);
+  overflow-wrap: anywhere;
+}
+
+.chat-form {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.chat-form input {
+  min-width: 0;
+}
+
+@media (max-width: 1400px) {
+  .communities-content-grid,
+  .details-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .communities-main {
+    width: calc(100% - 250px);
+    max-width: calc(100vw - 250px);
+  }
+
+  .chat-card {
+    min-height: 520px;
+  }
+}
+
+@media (max-width: 900px) {
+  .communities-main {
+    margin-left: 0;
+    width: 100%;
+    max-width: 100vw;
+    padding: 20px;
+  }
+
+  .message-bubble {
+    max-width: 82%;
+  }
+}

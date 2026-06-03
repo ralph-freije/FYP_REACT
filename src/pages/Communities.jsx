@@ -194,6 +194,34 @@ export default function Communities() {
     init();
   }, []);
 
+  useEffect(() => {
+    if (!selectedCommunity?.id || !isSelectedMember) return;
+
+    let cancelled = false;
+
+    const refreshMessages = async () => {
+      try {
+        await markCommunityMessagesRead(selectedCommunity.id);
+        const res = await getCommunityMessages(selectedCommunity.id);
+
+        if (!cancelled) {
+          setMessages(res.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to refresh community messages:", err);
+      }
+    };
+
+    refreshMessages();
+
+    const interval = setInterval(refreshMessages, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [selectedCommunity?.id, isSelectedMember]);
+
   const refreshAfterCommunityChange = async (communityId) => {
     const updatedCommunities = await loadCommunities();
 
@@ -347,7 +375,7 @@ export default function Communities() {
       });
 
       setNewMessage("");
-      await loadMessages(selectedCommunity.id, false);
+      await loadMessages(selectedCommunity.id, true);
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || "Failed to send message.");
@@ -365,7 +393,7 @@ export default function Communities() {
       setActionLoading(true);
       await shareCommunityAchievement(selectedCommunity.id);
       setSuccess("Achievement shared to community chat.");
-      await loadMessages(selectedCommunity.id, false);
+      await loadMessages(selectedCommunity.id, true);
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || "Failed to share achievement.");
@@ -490,6 +518,8 @@ export default function Communities() {
     }
 
     try {
+      await loadMessages(selectedCommunity.id, true);
+
       const res = await getMessageReaders(message.id);
 
       setReadersModal({
@@ -634,7 +664,9 @@ export default function Communities() {
               </div>
 
               {filteredCommunities.length === 0 && (
-                <p className="empty-text">No communities found for this filter.</p>
+                <p className="empty-text">
+                  No communities found for this filter.
+                </p>
               )}
 
               <div className="communities-list">
@@ -762,7 +794,9 @@ export default function Communities() {
 
                     <div className="community-header-actions">
                       {selectedSummary?.role && (
-                        <span className="role-pill">{selectedSummary.role}</span>
+                        <span className="role-pill">
+                          {selectedSummary.role}
+                        </span>
                       )}
 
                       {isSelectedCreator && (
@@ -930,7 +964,9 @@ export default function Communities() {
                                     !isCurrentUser(member.id) && (
                                       <button
                                         className="remove-member-btn"
-                                        onClick={() => handleRemoveMember(member)}
+                                        onClick={() =>
+                                          handleRemoveMember(member)
+                                        }
                                         disabled={actionLoading}
                                       >
                                         Remove
@@ -1205,9 +1241,7 @@ export default function Communities() {
               </div>
 
               {readersModal.readers.length === 0 ? (
-                <p className="empty-text">
-                  No one has read this message yet.
-                </p>
+                <p className="empty-text">No one has read this message yet.</p>
               ) : (
                 <div className="readers-list">
                   {readersModal.readers.map((reader) => (

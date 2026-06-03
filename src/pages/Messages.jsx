@@ -89,27 +89,47 @@ export default function Messages() {
     setMutualUsers(res.data || []);
   };
 
-const loadMessages = async (conversationId, showLoader = true) => {
-  try {
-    if (showLoader) {
-      setChatLoading(true);
+  const loadMessages = async (conversationId, showLoader = true) => {
+    try {
+      if (showLoader) {
+        setChatLoading(true);
+      }
+
+      await markPrivateMessagesRead(conversationId);
+
+      const res = await getPrivateMessages(conversationId);
+      setMessages(res.data || []);
+
+      await loadConversations();
+
+      window.dispatchEvent(new Event("notifications-updated"));
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load messages.");
+    } finally {
+      if (showLoader) {
+        setChatLoading(false);
+      }
     }
+  };
 
-    await markPrivateMessagesRead(conversationId);
+  const refreshSelectedConversation = async () => {
+    if (!selectedConversation?.id) return;
 
-    const res = await getPrivateMessages(conversationId);
-    setMessages(res.data || []);
+    try {
+      await markPrivateMessagesRead(selectedConversation.id);
 
-    await loadConversations();
-  } catch (err) {
-    console.error(err);
-    setError("Failed to load messages.");
-  } finally {
-    if (showLoader) {
-      setChatLoading(false);
+      const res = await getPrivateMessages(selectedConversation.id);
+      setMessages(res.data || []);
+
+      await loadConversations();
+
+      window.dispatchEvent(new Event("notifications-updated"));
+    } catch (err) {
+      console.error("Failed to refresh private messages:", err);
     }
-  }
-};
+  };
+
   const loadAll = async () => {
     try {
       setLoading(true);
@@ -125,6 +145,26 @@ const loadMessages = async (conversationId, showLoader = true) => {
   useEffect(() => {
     loadAll();
   }, []);
+
+  useEffect(() => {
+    if (!selectedConversation?.id) return;
+
+    let cancelled = false;
+
+    const refreshMessages = async () => {
+      if (cancelled) return;
+      await refreshSelectedConversation();
+    };
+
+    refreshMessages();
+
+    const interval = setInterval(refreshMessages, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [selectedConversation?.id]);
 
   const handleSearchMutuals = async (e) => {
     e.preventDefault();
@@ -217,6 +257,8 @@ const loadMessages = async (conversationId, showLoader = true) => {
     if (!message?.is_mine) return;
 
     try {
+      await refreshSelectedConversation();
+
       const res = await getPrivateMessageReaders(message.id);
 
       setReadersModal({
@@ -240,9 +282,7 @@ const loadMessages = async (conversationId, showLoader = true) => {
           <div className="messages-header">
             <div>
               <h1>Messages</h1>
-              <p>
-                Private conversations between users who follow each other.
-              </p>
+              <p>Private conversations between users who follow each other.</p>
             </div>
           </div>
 
@@ -437,9 +477,9 @@ const loadMessages = async (conversationId, showLoader = true) => {
                   </div>
 
                   <div className="dm-messages">
-                 {chatLoading && messages.length === 0 ? (
-  <PageLoader text="Loading chat..." />
-) : messages.length === 0 ? (
+                    {chatLoading && messages.length === 0 ? (
+                      <PageLoader text="Loading chat..." />
+                    ) : messages.length === 0 ? (
                       <p className="empty-text">
                         No messages yet. Start the conversation.
                       </p>
@@ -449,9 +489,7 @@ const loadMessages = async (conversationId, showLoader = true) => {
                           className={`dm-message-row ${
                             message.is_mine ? "mine" : "theirs"
                           } ${
-                            message.type === "achievement"
-                              ? "achievement"
-                              : ""
+                            message.type === "achievement" ? "achievement" : ""
                           }`}
                           key={message.id}
                         >
@@ -508,9 +546,7 @@ const loadMessages = async (conversationId, showLoader = true) => {
                                   className={`dm-ticks ${
                                     message.is_read ? "read" : ""
                                   }`}
-                                  title={
-                                    message.is_read ? "Read" : "Delivered"
-                                  }
+                                  title={message.is_read ? "Read" : "Delivered"}
                                   onClick={() => handleOpenReaders(message)}
                                 >
                                   ✓✓
