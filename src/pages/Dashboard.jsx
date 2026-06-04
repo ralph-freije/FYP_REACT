@@ -2,6 +2,7 @@ import Sidebar from "../components/Sidebar";
 import CarbonChart from "../components/CarbonChart";
 import { useEffect, useState } from "react";
 import { getDashboard } from "../api/dashboardApi";
+import { createGoal, deleteGoal } from "../api/goalApi";
 import { useNavigate } from "react-router-dom";
 import {
   FaCarSide,
@@ -9,6 +10,10 @@ import {
   FaBolt,
   FaShoppingBag,
   FaRegLightbulb,
+  FaPlus,
+  FaTrash,
+  FaTimes,
+  FaBullseye,
 } from "react-icons/fa";
 import "./Dashboard.css";
 import { getMe } from "../api/authApi";
@@ -51,6 +56,14 @@ export default function Dashboard() {
     recent_activities: [],
     goals: [],
   });
+
+  const [goalFormOpen, setGoalFormOpen] = useState(false);
+  const [goalTitle, setGoalTitle] = useState("");
+  const [goalCategory, setGoalCategory] = useState("carbon");
+  const [goalTarget, setGoalTarget] = useState("");
+  const [goalDeadline, setGoalDeadline] = useState("");
+  const [goalError, setGoalError] = useState("");
+  const [goalLoading, setGoalLoading] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -127,6 +140,33 @@ export default function Dashboard() {
     100
   );
 
+  const loadDashboard = async () => {
+    try {
+      const res = await getDashboard();
+
+      setDashboard({
+        total_carbon: {
+          today: Number(res.data?.total_carbon?.today || 0),
+          week: Number(res.data?.total_carbon?.week || 0),
+          month: Number(res.data?.total_carbon?.month || 0),
+          all: Number(res.data?.total_carbon?.all || 0),
+        },
+        categories: {
+          transport: Number(res.data?.categories?.transport || 0),
+          diet: Number(res.data?.categories?.diet || 0),
+          energy: Number(res.data?.categories?.energy || 0),
+          shopping: Number(res.data?.categories?.shopping || 0),
+        },
+        trend: res.data?.trend || [],
+        recent_activities: res.data?.recent_activities || [],
+        goals: res.data?.goals || [],
+      });
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load dashboard");
+    }
+  };
+
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -137,38 +177,77 @@ export default function Dashboard() {
       }
     };
 
-    const loadDashboard = async () => {
+    const init = async () => {
       try {
-        const res = await getDashboard();
-
-        setDashboard({
-          total_carbon: {
-            today: Number(res.data?.total_carbon?.today || 0),
-            week: Number(res.data?.total_carbon?.week || 0),
-            month: Number(res.data?.total_carbon?.month || 0),
-            all: Number(res.data?.total_carbon?.all || 0),
-          },
-          categories: {
-            transport: Number(res.data?.categories?.transport || 0),
-            diet: Number(res.data?.categories?.diet || 0),
-            energy: Number(res.data?.categories?.energy || 0),
-            shopping: Number(res.data?.categories?.shopping || 0),
-          },
-          trend: res.data?.trend || [],
-          recent_activities: res.data?.recent_activities || [],
-          goals: res.data?.goals || [],
-        });
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load dashboard");
+        await Promise.all([loadDashboard(), loadUser()]);
       } finally {
         setLoading(false);
       }
     };
 
-    loadDashboard();
-    loadUser();
+    init();
   }, []);
+
+  const resetGoalForm = () => {
+    setGoalTitle("");
+    setGoalCategory("carbon");
+    setGoalTarget("");
+    setGoalDeadline("");
+    setGoalError("");
+  };
+
+  const handleCreateGoal = async (e) => {
+    e.preventDefault();
+
+    if (!goalTitle.trim()) {
+      setGoalError("Please enter a goal title.");
+      return;
+    }
+
+    if (!goalTarget || Number(goalTarget) <= 0) {
+      setGoalError("Please enter a valid target value.");
+      return;
+    }
+
+    try {
+      setGoalLoading(true);
+      setGoalError("");
+
+      await createGoal({
+        title: goalTitle.trim(),
+        category: goalCategory,
+        target_value: Number(goalTarget),
+        unit: "kg CO2e",
+        deadline: goalDeadline || null,
+      });
+
+      resetGoalForm();
+      setGoalFormOpen(false);
+      await loadDashboard();
+    } catch (err) {
+      console.error(err);
+      setGoalError(err.response?.data?.message || "Failed to create goal.");
+    } finally {
+      setGoalLoading(false);
+    }
+  };
+
+  const handleDeleteGoal = async (goalId) => {
+    const confirmed = window.confirm("Delete this goal?");
+
+    if (!confirmed) return;
+
+    try {
+      setGoalLoading(true);
+      await deleteGoal(goalId);
+      await loadDashboard();
+    } catch (err) {
+      console.error(err);
+      setGoalError("Failed to delete goal.");
+    } finally {
+      setGoalLoading(false);
+    }
+  };
 
   if (loading) return <PageLoader text="Loading dashboard..." />;
   if (error) return <p style={{ padding: "40px", color: "red" }}>{error}</p>;
@@ -211,7 +290,7 @@ export default function Dashboard() {
                     <strong>{totalMonth.toFixed(2)}</strong>{" "}
                     <span>kg CO2e</span>
                   </div>
-                  <div className="change-pill">0% vs last month</div>
+                  <div className="change-pill">Live monthly data</div>
                 </div>
               </div>
 
@@ -224,51 +303,135 @@ export default function Dashboard() {
                   <div className="legend-item">
                     <span className="legend-dot dot-green"></span>
                     <span>Transport</span>
-                    <strong>{Number(categories.transport || 0).toFixed(2)} kg</strong>
+                    <strong>
+                      {Number(categories.transport || 0).toFixed(2)} kg
+                    </strong>
                   </div>
 
                   <div className="legend-item">
                     <span className="legend-dot dot-blue"></span>
                     <span>Diet</span>
-                    <strong>{Number(categories.diet || 0).toFixed(2)} kg</strong>
+                    <strong>
+                      {Number(categories.diet || 0).toFixed(2)} kg
+                    </strong>
                   </div>
 
                   <div className="legend-item">
                     <span className="legend-dot dot-gray"></span>
                     <span>Energy</span>
-                    <strong>{Number(categories.energy || 0).toFixed(2)} kg</strong>
+                    <strong>
+                      {Number(categories.energy || 0).toFixed(2)} kg
+                    </strong>
                   </div>
 
                   <div className="legend-item">
                     <span className="legend-dot dot-light"></span>
                     <span>Shopping</span>
-                    <strong>{Number(categories.shopping || 0).toFixed(2)} kg</strong>
+                    <strong>
+                      {Number(categories.shopping || 0).toFixed(2)} kg
+                    </strong>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="goals-card">
-              <h3>Current Goals</h3>
+              <div className="goals-card-header">
+                <div>
+                  <h3>Current Goals</h3>
+                  <p>Monthly progress from your real activity data</p>
+                </div>
+
+                <button
+                  className="goal-icon-btn"
+                  onClick={() => setGoalFormOpen((prev) => !prev)}
+                >
+                  {goalFormOpen ? <FaTimes /> : <FaPlus />}
+                </button>
+              </div>
+
+              {goalFormOpen && (
+                <form className="goal-form" onSubmit={handleCreateGoal}>
+                  <input
+                    type="text"
+                    value={goalTitle}
+                    onChange={(e) => setGoalTitle(e.target.value)}
+                    placeholder="Goal title, e.g. Keep transport under 30kg"
+                  />
+
+                  <select
+                    value={goalCategory}
+                    onChange={(e) => setGoalCategory(e.target.value)}
+                  >
+                    <option value="carbon">Total carbon</option>
+                    <option value="transport">Transport</option>
+                    <option value="diet">Diet</option>
+                    <option value="energy">Energy</option>
+                    <option value="shopping">Shopping</option>
+                    <option value="custom">Custom</option>
+                  </select>
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={goalTarget}
+                    onChange={(e) => setGoalTarget(e.target.value)}
+                    placeholder="Target value"
+                  />
+
+                  <input
+                    type="date"
+                    value={goalDeadline}
+                    onChange={(e) => setGoalDeadline(e.target.value)}
+                  />
+
+                  {goalError && (
+                    <div className="goal-form-error">{goalError}</div>
+                  )}
+
+                  <button type="submit" disabled={goalLoading}>
+                    <FaBullseye /> {goalLoading ? "Saving..." : "Save Goal"}
+                  </button>
+                </form>
+              )}
 
               {(dashboard.goals || []).length === 0 && (
                 <p className="empty-text">No active goals yet.</p>
               )}
 
-              {(dashboard.goals || []).map((goal, i) => (
-                <div className="goal" key={i}>
+              {(dashboard.goals || []).map((goal) => (
+                <div className={`goal ${goal.is_completed ? "completed" : ""}`} key={goal.id}>
+                  {goal.is_completed && (
+  <span className="goal-completed-pill">Achievement unlocked</span>
+)}
                   <div className="goal-row">
-                    <span>{goal.name}</span>
+                    <span>{goal.title || goal.name}</span>
                     <strong>{goal.progress}%</strong>
+                  </div>
+
+                  <div className="goal-meta">
+                    <small>
+                      {Number(goal.current_value || 0).toFixed(2)} /{" "}
+                      {Number(goal.target_value || 0).toFixed(2)} {goal.unit}
+                    </small>
+
+                    {goal.deadline && <small>Due {goal.deadline}</small>}
                   </div>
 
                   <div className="progress">
                     <div style={{ width: `${goal.progress}%` }}></div>
                   </div>
+
+                  <button
+                    className="goal-delete-btn"
+                    onClick={() => handleDeleteGoal(goal.id)}
+                    disabled={goalLoading}
+                  >
+                    <FaTrash /> Delete
+                  </button>
                 </div>
               ))}
-
-              <button className="goal-add-btn">+ Add New Goal</button>
             </div>
           </div>
 
@@ -391,7 +554,9 @@ export default function Dashboard() {
                     <span>{item.category || "Activity"}</span>
                     <small>{item.created_at || "Today"}</small>
                   </div>
-                  <strong>{Number(item.carbon_value || 0).toFixed(2)} kg</strong>
+                  <strong>
+                    {Number(item.carbon_value || 0).toFixed(2)} kg
+                  </strong>
                 </div>
               ))}
             </div>

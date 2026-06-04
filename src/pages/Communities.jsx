@@ -39,6 +39,7 @@ import {
   FaEdit,
   FaSave,
   FaImage,
+FaSearch,
 } from "react-icons/fa";
 import "./Communities.css";
 
@@ -52,6 +53,7 @@ export default function Communities() {
   const [newGoal, setNewGoal] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [communityFilter, setCommunityFilter] = useState("all");
+  const [communitySearch, setCommunitySearch] = useState("");
   const [readersModal, setReadersModal] = useState(null);
   const [editingCommunity, setEditingCommunity] = useState(false);
   const [editCommunityName, setEditCommunityName] = useState("");
@@ -71,19 +73,37 @@ export default function Communities() {
   const isSelectedCreator =
     Number(selectedCommunity?.created_by) === Number(currentUser?.id);
 
-  const filteredCommunities = useMemo(() => {
-    if (communityFilter === "joined") {
-      return communities.filter((community) => community.is_member);
-    }
+ const filteredCommunities = useMemo(() => {
+  const keyword = communitySearch.trim().toLowerCase();
 
-    if (communityFilter === "created") {
-      return communities.filter(
-        (community) => Number(community.created_by) === Number(currentUser?.id)
+  let list = communities;
+
+  if (communityFilter === "joined") {
+    list = list.filter((community) => community.is_member);
+  }
+
+  if (communityFilter === "created") {
+    list = list.filter(
+      (community) => Number(community.created_by) === Number(currentUser?.id)
+    );
+  }
+
+  if (keyword) {
+    list = list.filter((community) => {
+      const name = community.name?.toLowerCase() || "";
+      const description = community.description?.toLowerCase() || "";
+      const creator = community.creator?.toLowerCase?.() || "";
+
+      return (
+        name.includes(keyword) ||
+        description.includes(keyword) ||
+        creator.includes(keyword)
       );
-    }
+    });
+  }
 
-    return communities;
-  }, [communities, communityFilter, currentUser]);
+  return list;
+}, [communities, communityFilter, communitySearch, currentUser]);
 
   const clearAlerts = () => {
     setError("");
@@ -634,34 +654,47 @@ export default function Communities() {
           <div className="communities-content-grid">
             <section className="communities-list-card">
               <div className="section-title community-list-header">
-                <div>
-                  <h2>Available Communities</h2>
-                  <p>Browse, filter, and join sustainability groups.</p>
-                </div>
+  <div>
+    <h2>Available Communities</h2>
+    <p>Browse, filter, and join sustainability groups.</p>
+  </div>
 
-                <div className="community-filters">
-                  <button
-                    className={communityFilter === "all" ? "active" : ""}
-                    onClick={() => setCommunityFilter("all")}
-                  >
-                    All
-                  </button>
+  <div className="community-filters">
+    <button
+      className={communityFilter === "all" ? "active" : ""}
+      onClick={() => setCommunityFilter("all")}
+      type="button"
+    >
+      All
+    </button>
 
-                  <button
-                    className={communityFilter === "joined" ? "active" : ""}
-                    onClick={() => setCommunityFilter("joined")}
-                  >
-                    Joined
-                  </button>
+    <button
+      className={communityFilter === "joined" ? "active" : ""}
+      onClick={() => setCommunityFilter("joined")}
+      type="button"
+    >
+      Joined
+    </button>
 
-                  <button
-                    className={communityFilter === "created" ? "active" : ""}
-                    onClick={() => setCommunityFilter("created")}
-                  >
-                    Created by Me
-                  </button>
-                </div>
-              </div>
+    <button
+      className={communityFilter === "created" ? "active" : ""}
+      onClick={() => setCommunityFilter("created")}
+      type="button"
+    >
+      Created by Me
+    </button>
+  </div>
+</div>
+
+<div className="community-search-box">
+  <FaSearch />
+  <input
+    type="text"
+    value={communitySearch}
+    onChange={(e) => setCommunitySearch(e.target.value)}
+    placeholder="Search communities..."
+  />
+</div>
 
               {filteredCommunities.length === 0 && (
                 <p className="empty-text">
