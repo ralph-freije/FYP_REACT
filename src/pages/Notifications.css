@@ -272,14 +272,24 @@
   margin-bottom: 14px;
 }
 
-.notification-actor img,
-.actor-fallback {
+.notification-actor-avatar {
   width: 30px;
   height: 30px;
   border-radius: 999px;
+  flex: 0 0 30px;
+  overflow: hidden;
+  background: #10b981;
 }
 
-.notification-actor img {
+.notification-actor-avatar img,
+.actor-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+}
+
+.notification-actor-avatar img {
+  display: block;
   object-fit: cover;
 }
 
@@ -290,7 +300,14 @@
   align-items: center;
   justify-content: center;
   font-size: 12px;
+  font-weight: 800;
 }
+
+.actor-fallback.hidden {
+  display: none;
+}
+
+
 
 .notification-actions {
   display: flex;
@@ -328,17 +345,28 @@
   background: #fee2e2 !important;
 }
 
-.unread-dot {
-  position: absolute;
-  top: 18px;
-  right: 18px;
+.notification-time-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.notification-time-dot {
   width: 10px;
   height: 10px;
+  flex: 0 0 10px;
   border-radius: 999px;
   background: #22c55e;
   box-shadow: 0 0 12px rgba(34, 197, 94, 0.7);
 }
 
+
+.notification-card > .unread-dot {
+  display: none;
+}
 .notifications-pagination-note {
   margin-top: 18px;
   color: #94a3b8;

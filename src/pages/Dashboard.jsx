@@ -27,7 +27,7 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import PageLoader from "../components/PageLoader";
+import InlineLoader from "../components/InlineLoader";
 
 ChartJS.register(
   LineElement,
@@ -249,318 +249,404 @@ export default function Dashboard() {
     }
   };
 
-  if (loading) return <PageLoader text="Loading dashboard..." />;
-  if (error) return <p style={{ padding: "40px", color: "red" }}>{error}</p>;
-
   return (
     <div className="dashboard-layout">
       <Sidebar />
 
       <div className="dashboard-main">
         <div className="dashboard-container">
-          <div className="header">
-            <div>
-              <h1>Welcome back, {user?.name || "User"} 👋</h1>
-              <p>Here’s your sustainability impact this month.</p>
-            </div>
-
-            <div className="header-actions">
-              <button className="btn-light">This Month</button>
-              <button
-                className="btn-green"
-                onClick={() => navigate("/activity")}
-              >
-                + Log Activity
-              </button>
-            </div>
-          </div>
-
-          <div className="top-grid">
-            <div className="main-card">
-              <div className="card-header">
+          {loading ? (
+            <InlineLoader
+              text="Loading dashboard..."
+              subtext="Preparing your sustainability overview."
+            />
+          ) : error ? (
+            <div className="dashboard-error-card">{error}</div>
+          ) : (
+            <>
+              <div className="header">
                 <div>
-                  <h3>Carbon Footprint</h3>
-                  <span className="subtle-text">
-                    Monthly overview of CO2 emission
-                  </span>
+                  <h1>Welcome back, {user?.name || "User"} 👋</h1>
+                  <p>Here’s your sustainability impact this month.</p>
                 </div>
 
-                <div className="carbon-value">
-                  <div className="carbon-number">
-                    <strong>{totalMonth.toFixed(2)}</strong>{" "}
-                    <span>kg CO2e</span>
-                  </div>
-                  <div className="change-pill">Live monthly data</div>
-                </div>
-              </div>
-
-              <div className="chart-section">
-                <div className="chart-wrapper">
-                  <CarbonChart data={chartData} percentage={percentage} />
-                </div>
-
-                <div className="legend">
-                  <div className="legend-item">
-                    <span className="legend-dot dot-green"></span>
-                    <span>Transport</span>
-                    <strong>
-                      {Number(categories.transport || 0).toFixed(2)} kg
-                    </strong>
-                  </div>
-
-                  <div className="legend-item">
-                    <span className="legend-dot dot-blue"></span>
-                    <span>Diet</span>
-                    <strong>
-                      {Number(categories.diet || 0).toFixed(2)} kg
-                    </strong>
-                  </div>
-
-                  <div className="legend-item">
-                    <span className="legend-dot dot-gray"></span>
-                    <span>Energy</span>
-                    <strong>
-                      {Number(categories.energy || 0).toFixed(2)} kg
-                    </strong>
-                  </div>
-
-                  <div className="legend-item">
-                    <span className="legend-dot dot-light"></span>
-                    <span>Shopping</span>
-                    <strong>
-                      {Number(categories.shopping || 0).toFixed(2)} kg
-                    </strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="goals-card">
-              <div className="goals-card-header">
-                <div>
-                  <h3>Current Goals</h3>
-                  <p>Monthly progress from your real activity data</p>
-                </div>
-
-                <button
-                  className="goal-icon-btn"
-                  onClick={() => setGoalFormOpen((prev) => !prev)}
-                >
-                  {goalFormOpen ? <FaTimes /> : <FaPlus />}
-                </button>
-              </div>
-
-              {goalFormOpen && (
-                <form className="goal-form" onSubmit={handleCreateGoal}>
-                  <input
-                    type="text"
-                    value={goalTitle}
-                    onChange={(e) => setGoalTitle(e.target.value)}
-                    placeholder="Goal title, e.g. Keep transport under 30kg"
-                  />
-
-                  <select
-                    value={goalCategory}
-                    onChange={(e) => setGoalCategory(e.target.value)}
+                <div className="header-actions">
+                  <button className="btn-light">This Month</button>
+                  <button
+                    className="btn-green"
+                    onClick={() => navigate("/activity")}
                   >
-                    <option value="carbon">Total carbon</option>
-                    <option value="transport">Transport</option>
-                    <option value="diet">Diet</option>
-                    <option value="energy">Energy</option>
-                    <option value="shopping">Shopping</option>
-                    <option value="custom">Custom</option>
-                  </select>
-
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    value={goalTarget}
-                    onChange={(e) => setGoalTarget(e.target.value)}
-                    placeholder="Target value"
-                  />
-
-                  <input
-                    type="date"
-                    value={goalDeadline}
-                    onChange={(e) => setGoalDeadline(e.target.value)}
-                  />
-
-                  {goalError && (
-                    <div className="goal-form-error">{goalError}</div>
-                  )}
-
-                  <button type="submit" disabled={goalLoading}>
-                    <FaBullseye /> {goalLoading ? "Saving..." : "Save Goal"}
+                    + Log Activity
                   </button>
-                </form>
-              )}
+                </div>
+              </div>
 
-              {(dashboard.goals || []).length === 0 && (
-                <p className="empty-text">No active goals yet.</p>
-              )}
+              <div className="top-grid">
+                <div className="main-card">
+                  <div className="card-header">
+                    <div>
+                      <h3>Carbon Footprint</h3>
+                      <span className="subtle-text">
+                        Monthly overview of CO2 emission
+                      </span>
+                    </div>
 
-              {(dashboard.goals || []).map((goal) => (
-                <div className={`goal ${goal.is_completed ? "completed" : ""}`} key={goal.id}>
-                  {goal.is_completed && (
-  <span className="goal-completed-pill">Achievement unlocked</span>
-)}
-                  <div className="goal-row">
-                    <span>{goal.title || goal.name}</span>
-                    <strong>{goal.progress}%</strong>
+                    <div className="carbon-value">
+                      <div className="carbon-number">
+                        <strong>{totalMonth.toFixed(2)}</strong>{" "}
+                        <span>kg CO2e</span>
+                      </div>
+                      <div className="change-pill">Live monthly data</div>
+                    </div>
                   </div>
 
-                  <div className="goal-meta">
-                    <small>
-                      {Number(goal.current_value || 0).toFixed(2)} /{" "}
-                      {Number(goal.target_value || 0).toFixed(2)} {goal.unit}
-                    </small>
+                  <div className="chart-section">
+                    <div className="chart-wrapper">
+                      <CarbonChart data={chartData} percentage={percentage} />
+                    </div>
 
-                    {goal.deadline && <small>Due {goal.deadline}</small>}
+                    <div className="legend">
+                      <div className="legend-item">
+                        <span className="legend-dot dot-green"></span>
+                        <span>Transport</span>
+                        <strong>
+                          {Number(categories.transport || 0).toFixed(2)} kg
+                        </strong>
+                      </div>
+
+                      <div className="legend-item">
+                        <span className="legend-dot dot-blue"></span>
+                        <span>Diet</span>
+                        <strong>
+                          {Number(categories.diet || 0).toFixed(2)} kg
+                        </strong>
+                      </div>
+
+                      <div className="legend-item">
+                        <span className="legend-dot dot-gray"></span>
+                        <span>Energy</span>
+                        <strong>
+                          {Number(categories.energy || 0).toFixed(2)} kg
+                        </strong>
+                      </div>
+
+                      <div className="legend-item">
+                        <span className="legend-dot dot-yellow"></span>
+                        <span>Shopping</span>
+                        <strong>
+                          {Number(categories.shopping || 0).toFixed(2)} kg
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="stats-column">
+                  <div className="stat-card">
+                    <div className="stat-icon green-bg">
+                      <FaCarSide />
+                    </div>
+                    <div>
+                      <p>Today</p>
+                      <h3>{Number(totals.today || 0).toFixed(2)} kg</h3>
+                    </div>
                   </div>
 
-                  <div className="progress">
-                    <div style={{ width: `${goal.progress}%` }}></div>
+                  <div className="stat-card">
+                    <div className="stat-icon blue-bg">
+                      <FaBolt />
+                    </div>
+                    <div>
+                      <p>This Week</p>
+                      <h3>{Number(totals.week || 0).toFixed(2)} kg</h3>
+                    </div>
+                  </div>
+
+                  <div className="stat-card">
+                    <div className="stat-icon yellow-bg">
+                      <FaShoppingBag />
+                    </div>
+                    <div>
+                      <p>All Time</p>
+                      <h3>{Number(totals.all || 0).toFixed(2)} kg</h3>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="dashboard-grid">
+                <div className="dashboard-card trend-card">
+                  <div className="section-title">
+                    <div>
+                      <h3>Emission Trend</h3>
+                      <p>Your carbon footprint over the last 7 days.</p>
+                    </div>
+                  </div>
+
+                  <div className="trend-chart">
+                    {dashboard.trend.length > 0 ? (
+                      <Line data={trendData} options={trendOptions} />
+                    ) : (
+                      <div className="empty-state">
+                        No trend data yet. Log activities to see your progress.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="dashboard-card tips-card">
+                  <div className="section-title">
+                    <div>
+                      <h3>Eco Tip</h3>
+                      <p>Small steps that make a difference.</p>
+                    </div>
+                    <FaRegLightbulb />
+                  </div>
+
+                  <div className="tip-box">
+                    <h4>Try walking for short trips</h4>
+                    <p>
+                      Replacing one short car trip with walking can reduce your
+                      monthly emissions and improve your health.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="goals-section dashboard-card">
+                <div className="section-title goals-title-row">
+                  <div>
+                    <h3>Personal Goals</h3>
+                    <p>Create goals and earn achievements when you complete them.</p>
                   </div>
 
                   <button
-                    className="goal-delete-btn"
-                    onClick={() => handleDeleteGoal(goal.id)}
-                    disabled={goalLoading}
+                    className="goal-add-btn"
+                    onClick={() => {
+                      setGoalFormOpen(true);
+                      setGoalError("");
+                    }}
                   >
-                    <FaTrash /> Delete
+                    <FaPlus /> Add Goal
                   </button>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          <div className="stats summary-stats">
-            <div className="stat-card">
-              <h4>Today</h4>
-              <p>{Number(totals.today || 0).toFixed(2)} kg</p>
-            </div>
+                {goalError && <div className="goal-error">{goalError}</div>}
 
-            <div className="stat-card">
-              <h4>This Week</h4>
-              <p>{Number(totals.week || 0).toFixed(2)} kg</p>
-            </div>
+                {goalFormOpen && (
+                  <form className="goal-form" onSubmit={handleCreateGoal}>
+                    <div className="goal-form-header">
+                      <h4>New goal</h4>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGoalFormOpen(false);
+                          resetGoalForm();
+                        }}
+                      >
+                        <FaTimes />
+                      </button>
+                    </div>
 
-            <div className="stat-card">
-              <h4>This Month</h4>
-              <p>{Number(totals.month || 0).toFixed(2)} kg</p>
-            </div>
-          </div>
+                    <div className="goal-form-grid">
+                      <input
+                        type="text"
+                        value={goalTitle}
+                        onChange={(e) => setGoalTitle(e.target.value)}
+                        placeholder="Goal title"
+                      />
 
-          <div className="stats">
-            <div className="stat-card">
-              <div className="stat-icon">
-                <FaCarSide />
-              </div>
-              <h4>Transport</h4>
-              <p>
-                {Number(categories.transport || 0).toFixed(2)} <span>kg</span>
-              </p>
-              <small className="muted-text">Live data</small>
-            </div>
+                      <select
+                        value={goalCategory}
+                        onChange={(e) => setGoalCategory(e.target.value)}
+                      >
+                        <option value="carbon">Carbon</option>
+                        <option value="transport">Transport</option>
+                        <option value="diet">Diet</option>
+                        <option value="energy">Energy</option>
+                        <option value="shopping">Shopping</option>
+                      </select>
 
-            <div className="stat-card">
-              <div className="stat-icon">
-                <FaUtensils />
-              </div>
-              <h4>Diet</h4>
-              <p>
-                {Number(categories.diet || 0).toFixed(2)} <span>kg</span>
-              </p>
-              <small className="muted-text">Live data</small>
-            </div>
+                      <input
+                        type="number"
+                        min="1"
+                        step="0.1"
+                        value={goalTarget}
+                        onChange={(e) => setGoalTarget(e.target.value)}
+                        placeholder="Target value"
+                      />
 
-            <div className="stat-card">
-              <div className="stat-icon">
-                <FaBolt />
-              </div>
-              <h4>Energy</h4>
-              <p>
-                {Number(categories.energy || 0).toFixed(2)} <span>kg</span>
-              </p>
-              <small className="muted-text">Live data</small>
-            </div>
+                      <input
+                        type="date"
+                        value={goalDeadline}
+                        onChange={(e) => setGoalDeadline(e.target.value)}
+                      />
+                    </div>
 
-            <div className="stat-card">
-              <div className="stat-icon">
-                <FaShoppingBag />
-              </div>
-              <h4>Shopping</h4>
-              <p>
-                {Number(categories.shopping || 0).toFixed(2)} <span>kg</span>
-              </p>
-              <small className="muted-text">Live data</small>
-            </div>
-          </div>
+                    <button
+                      className="goal-save-btn"
+                      type="submit"
+                      disabled={goalLoading}
+                    >
+                      {goalLoading ? "Saving..." : "Save Goal"}
+                    </button>
+                  </form>
+                )}
 
-          <div className="ai-tip">
-            <div className="ai-tip-left">
-              <div className="tip-icon">
-                <FaRegLightbulb />
-              </div>
-
-              <div>
-                <div className="tip-badges">
-                  <span className="tip-badge blue">AI SMART TIP</span>
-                  <span className="tip-badge gray">
-                    Based on your activity
-                  </span>
-                </div>
-
-                <p>
-                  Switching to a meat-free diet just two more days a week could
-                  reduce your footprint by another 45kg CO2e this month.
-                </p>
-              </div>
-            </div>
-
-            <button className="challenge-btn">Accept Challenge</button>
-          </div>
-
-          <div className="dashboard-bottom-grid">
-            <div className="trend-card">
-              <div className="section-header">
-                <div>
-                  <h3>Carbon Trend</h3>
-                  <p>Last 7 days of tracked emissions</p>
-                </div>
-              </div>
-
-              <div className="line-chart-wrapper">
-                <Line data={trendData} options={trendOptions} />
-              </div>
-            </div>
-
-            <div className="recent-activities">
-              <div className="section-header">
-                <div>
-                  <h3>Recent Activity</h3>
-                  <p>Your latest logged actions</p>
-                </div>
-              </div>
-
-              {(dashboard?.recent_activities || []).length === 0 && (
-                <p className="empty-text">No activities logged yet.</p>
-              )}
-
-              {(dashboard?.recent_activities || []).map((item) => (
-                <div key={item.id} className="activity-row">
-                  <div>
-                    <span>{item.category || "Activity"}</span>
-                    <small>{item.created_at || "Today"}</small>
+                {dashboard.goals.length === 0 ? (
+                  <div className="goals-empty">
+                    <FaBullseye />
+                    <h4>No goals yet</h4>
+                    <p>
+                      Add a monthly carbon goal and EcoTrack will track your progress.
+                    </p>
                   </div>
-                  <strong>
-                    {Number(item.carbon_value || 0).toFixed(2)} kg
-                  </strong>
+                ) : (
+                  <div className="goals-list">
+                    {dashboard.goals.map((goal) => {
+                      const goalPercentage = Math.min(
+                        Math.round(Number(goal.progress_percentage || 0)),
+                        100
+                      );
+
+                      return (
+                        <div
+                          className={`goal-card ${
+                            goal.is_completed ? "completed" : ""
+                          }`}
+                          key={goal.id}
+                        >
+                          <div className="goal-card-header">
+                            <div>
+                              <span>{goal.category}</span>
+                              <h4>{goal.title}</h4>
+                            </div>
+
+                            <button
+                              className="goal-delete-btn"
+                              onClick={() => handleDeleteGoal(goal.id)}
+                              disabled={goalLoading}
+                              title="Delete goal"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+
+                          <div className="goal-progress-row">
+                            <p>
+                              {Number(goal.current_value || 0).toFixed(2)} /{" "}
+                              {Number(goal.target_value || 0).toFixed(2)}{" "}
+                              {goal.unit || "kg CO2e"}
+                            </p>
+                            <strong>{goalPercentage}%</strong>
+                          </div>
+
+                          <div className="goal-progress-bar">
+                            <div style={{ width: `${goalPercentage}%` }}></div>
+                          </div>
+
+                          <div className="goal-footer">
+                            <span>
+                              {goal.deadline
+                                ? `Deadline: ${goal.deadline}`
+                                : "No deadline"}
+                            </span>
+
+                            {goal.is_completed && (
+                              <strong className="goal-completed-badge">
+                                Completed
+                              </strong>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="bottom-grid">
+                <div className="dashboard-card activity-card">
+                  <div className="section-title">
+                    <div>
+                      <h3>Recent Activities</h3>
+                      <p>Latest actions logged into your carbon tracker.</p>
+                    </div>
+                  </div>
+
+                  <div className="activity-list">
+                    {dashboard.recent_activities.length > 0 ? (
+                      dashboard.recent_activities.map((activity) => (
+                        <div className="activity-row" key={activity.id}>
+                          <div
+                            className={`activity-icon ${activity.category}`}
+                          >
+                            {activity.category === "transport" && <FaCarSide />}
+                            {activity.category === "diet" && <FaUtensils />}
+                            {activity.category === "energy" && <FaBolt />}
+                            {activity.category === "shopping" && (
+                              <FaShoppingBag />
+                            )}
+                          </div>
+
+                          <div>
+                            <h4>{activity.title}</h4>
+                            <p>
+                              {activity.category} •{" "}
+                              {Number(activity.carbon_value || 0).toFixed(2)} kg
+                            </p>
+                          </div>
+
+                          <span>{activity.activity_date}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="empty-state">
+                        No activities yet. Start by logging your first activity.
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
+
+                <div className="dashboard-card overview-card">
+                  <div className="section-title">
+                    <div>
+                      <h3>Category Summary</h3>
+                      <p>Where your emissions are coming from.</p>
+                    </div>
+                  </div>
+
+                  <div className="summary-list">
+                    <div>
+                      <span>Transport</span>
+                      <strong>
+                        {Number(categories.transport || 0).toFixed(2)} kg
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Diet</span>
+                      <strong>{Number(categories.diet || 0).toFixed(2)} kg</strong>
+                    </div>
+
+                    <div>
+                      <span>Energy</span>
+                      <strong>
+                        {Number(categories.energy || 0).toFixed(2)} kg
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Shopping</span>
+                      <strong>
+                        {Number(categories.shopping || 0).toFixed(2)} kg
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

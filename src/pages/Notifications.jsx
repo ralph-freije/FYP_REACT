@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
-import PageLoader from "../components/PageLoader";
+import InlineLoader from "../components/InlineLoader";
 import {
   getNotifications,
   markAllNotificationsAsRead,
@@ -73,7 +73,8 @@ export default function Notifications() {
   useEffect(() => {
     const syncDesktopToggle = () => {
       setDesktopEnabled(
-        localStorage.getItem("ecotrack_desktop_notifications_enabled") === "true"
+        localStorage.getItem("ecotrack_desktop_notifications_enabled") ===
+          "true"
       );
 
       if ("Notification" in window) {
@@ -132,7 +133,34 @@ export default function Notifications() {
     setDesktopEnabled(false);
     window.dispatchEvent(new Event("desktop-notifications-updated"));
   };
+  const getImageSrc = (src) => {
+    if (!src) return null;
 
+    if (src.startsWith("http://") || src.startsWith("https://")) {
+      return src;
+    }
+
+    if (src.startsWith("/storage/")) {
+      return `http://127.0.0.1:8000${src}`;
+    }
+
+    if (src.startsWith("storage/")) {
+      return `http://127.0.0.1:8000/${src}`;
+    }
+
+    return `http://127.0.0.1:8000/storage/${src}`;
+  };
+
+  const getInitials = (name) => {
+    if (!name) return "U";
+
+    return name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  };
   const updateNotificationAsReadInState = (notificationId) => {
     setNotifications((prev) =>
       prev.map((notification) =>
@@ -270,10 +298,6 @@ export default function Notifications() {
     return "general";
   };
 
-  if (loading) {
-    return <PageLoader text="Loading notifications..." />;
-  }
-
   return (
     <div className="notifications-layout">
       <Sidebar />
@@ -369,7 +393,12 @@ export default function Notifications() {
 
           {error && <div className="notifications-error">{error}</div>}
 
-          {notifications.length === 0 ? (
+          {loading ? (
+            <InlineLoader
+              text="Loading notifications..."
+              subtext="Updating this list..."
+            />
+          ) : notifications.length === 0 ? (
             <div className="empty-notifications">
               <div className="empty-notifications-icon">
                 <FaBell />
@@ -404,30 +433,51 @@ export default function Notifications() {
                         <p>{notification.message}</p>
                       </div>
 
-                      <span>
-                        {notification.created_at_human ||
-                          notification.created_at}
-                      </span>
-                    </div>
+                      <div className="notification-time-wrap">
+                          <span>
+                            {notification.created_at_human || notification.created_at}
+                          </span>
 
-                    {notification.actor && (
-                      <div className="notification-actor">
-                        {notification.actor.profile_picture ? (
-                          <img
-                            src={notification.actor.profile_picture}
-                            alt={notification.actor.name}
-                          />
-                        ) : (
-                          <div className="actor-fallback">
-                            {notification.actor.name
-                              ?.charAt(0)
-                              ?.toUpperCase() || "U"}
-                          </div>
-                        )}
-
-                        <span>{notification.actor.name}</span>
+                            {!notification.is_read && <span className="notification-time-dot" />}
                       </div>
-                    )}
+                   </div>
+
+                 {notification.actor && (
+  <div className="notification-actor">
+    <div className="notification-actor-avatar">
+      {notification.actor.profile_picture ? (
+        <>
+          <img
+            src={getImageSrc(notification.actor.profile_picture)}
+            alt={notification.actor.name}
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+
+              const fallback =
+                e.currentTarget.parentElement.querySelector(
+                  ".actor-fallback"
+                );
+
+              if (fallback) {
+                fallback.style.display = "flex";
+              }
+            }}
+          />
+
+          <div className="actor-fallback hidden">
+            {getInitials(notification.actor.name)}
+          </div>
+        </>
+      ) : (
+        <div className="actor-fallback">
+          {getInitials(notification.actor.name)}
+        </div>
+      )}
+    </div>
+
+    <span>{notification.actor.name}</span>
+  </div>
+)}
 
                     <div className="notification-actions">
                       {!notification.is_read && (
@@ -459,7 +509,6 @@ export default function Notifications() {
                     </div>
                   </div>
 
-                  {!notification.is_read && <span className="unread-dot" />}
                 </div>
               ))}
             </div>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/Sidebar";
-import PageLoader from "../components/PageLoader";
+import InlineLoader from "../components/InlineLoader";
 import { getProfile } from "../api/profileApi";
 import {
   getCommunities,
@@ -39,7 +39,7 @@ import {
   FaEdit,
   FaSave,
   FaImage,
-FaSearch,
+  FaSearch,
 } from "react-icons/fa";
 import "./Communities.css";
 
@@ -73,37 +73,37 @@ export default function Communities() {
   const isSelectedCreator =
     Number(selectedCommunity?.created_by) === Number(currentUser?.id);
 
- const filteredCommunities = useMemo(() => {
-  const keyword = communitySearch.trim().toLowerCase();
+  const filteredCommunities = useMemo(() => {
+    const keyword = communitySearch.trim().toLowerCase();
 
-  let list = communities;
+    let list = communities;
 
-  if (communityFilter === "joined") {
-    list = list.filter((community) => community.is_member);
-  }
+    if (communityFilter === "joined") {
+      list = list.filter((community) => community.is_member);
+    }
 
-  if (communityFilter === "created") {
-    list = list.filter(
-      (community) => Number(community.created_by) === Number(currentUser?.id)
-    );
-  }
-
-  if (keyword) {
-    list = list.filter((community) => {
-      const name = community.name?.toLowerCase() || "";
-      const description = community.description?.toLowerCase() || "";
-      const creator = community.creator?.toLowerCase?.() || "";
-
-      return (
-        name.includes(keyword) ||
-        description.includes(keyword) ||
-        creator.includes(keyword)
+    if (communityFilter === "created") {
+      list = list.filter(
+        (community) => Number(community.created_by) === Number(currentUser?.id)
       );
-    });
-  }
+    }
 
-  return list;
-}, [communities, communityFilter, communitySearch, currentUser]);
+    if (keyword) {
+      list = list.filter((community) => {
+        const name = community.name?.toLowerCase() || "";
+        const description = community.description?.toLowerCase() || "";
+        const creator = community.creator?.toLowerCase?.() || "";
+
+        return (
+          name.includes(keyword) ||
+          description.includes(keyword) ||
+          creator.includes(keyword)
+        );
+      });
+    }
+
+    return list;
+  }, [communities, communityFilter, communitySearch, currentUser]);
 
   const clearAlerts = () => {
     setError("");
@@ -552,8 +552,6 @@ export default function Communities() {
     }
   };
 
-  if (loading) return <PageLoader text="Loading communities..." />;
-
   return (
     <div className="communities-layout">
       <Sidebar />
@@ -570,533 +568,255 @@ export default function Communities() {
             </div>
           </div>
 
-          {error && (
-            <div className="community-alert error">
-              <span>{error}</span>
-              <button onClick={() => setError("")}>
-                <FaTimes />
-              </button>
-            </div>
-          )}
-
-          {success && (
-            <div className="community-alert success">
-              <span>{success}</span>
-              <button onClick={() => setSuccess("")}>
-                <FaTimes />
-              </button>
-            </div>
-          )}
-
-          <div className="communities-top-grid">
-            <form
-              className="create-community-card"
-              onSubmit={handleCreateCommunity}
-            >
-              <div className="card-icon green">
-                <FaPlus />
-              </div>
-
-              <div>
-                <h3>Create Community</h3>
-                <p>
-                  Start a group for your campus, family, friends, or workplace.
-                </p>
-              </div>
-
-              <input
-                type="text"
-                value={newCommunityName}
-                onChange={(e) => setNewCommunityName(e.target.value)}
-                placeholder="Example: Green Campus"
-              />
-
-              <button type="submit" disabled={actionLoading}>
-                {actionLoading ? "Creating..." : "Create Community"}
-              </button>
-            </form>
-
-            <div className="community-info-card">
-              <div className="card-icon blue">
-                <FaLeaf />
-              </div>
-
-              <h3>Community Climate Action</h3>
-              <p>
-                Communities help users stay motivated through shared goals,
-                chat, following, and social accountability.
-              </p>
-
-              <div className="info-stats">
-                <div>
-                  <strong>{communities.length}</strong>
-                  <span>Total Communities</span>
+          {loading ? (
+            <InlineLoader
+              text="Loading communities..."
+              subtext="Fetching your groups, members, and community stats."
+            />
+          ) : (
+            <>
+              {error && (
+                <div className="community-alert error">
+                  <span>{error}</span>
+                  <button onClick={() => setError("")}>
+                    <FaTimes />
+                  </button>
                 </div>
-
-                <div>
-                  <strong>
-                    {
-                      communities.filter((community) => community.is_member)
-                        .length
-                    }
-                  </strong>
-                  <span>Joined</span>
-                </div>
-
-                <div>
-                  <strong>{followingUsers.length}</strong>
-                  <span>Following</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="communities-content-grid">
-            <section className="communities-list-card">
-              <div className="section-title community-list-header">
-  <div>
-    <h2>Available Communities</h2>
-    <p>Browse, filter, and join sustainability groups.</p>
-  </div>
-
-  <div className="community-filters">
-    <button
-      className={communityFilter === "all" ? "active" : ""}
-      onClick={() => setCommunityFilter("all")}
-      type="button"
-    >
-      All
-    </button>
-
-    <button
-      className={communityFilter === "joined" ? "active" : ""}
-      onClick={() => setCommunityFilter("joined")}
-      type="button"
-    >
-      Joined
-    </button>
-
-    <button
-      className={communityFilter === "created" ? "active" : ""}
-      onClick={() => setCommunityFilter("created")}
-      type="button"
-    >
-      Created by Me
-    </button>
-  </div>
-</div>
-
-<div className="community-search-box">
-  <FaSearch />
-  <input
-    type="text"
-    value={communitySearch}
-    onChange={(e) => setCommunitySearch(e.target.value)}
-    placeholder="Search communities..."
-  />
-</div>
-
-              {filteredCommunities.length === 0 && (
-                <p className="empty-text">
-                  No communities found for this filter.
-                </p>
               )}
 
-              <div className="communities-list">
-                {filteredCommunities.map((community) => (
-                  <div
-                    className={`community-card ${
-                      selectedCommunity?.id === community.id ? "selected" : ""
-                    }`}
-                    key={community.id}
-                  >
-                    <div className="community-card-top">
-                      <div className="community-avatar">
-                        {community.image ? (
-                          <img
-                            src={getImageSrc(community.image)}
-                            alt={community.name}
-                          />
-                        ) : (
-                          <FaUsers />
-                        )}
-                      </div>
+              {success && (
+                <div className="community-alert success">
+                  <span>{success}</span>
+                  <button onClick={() => setSuccess("")}>
+                    <FaTimes />
+                  </button>
+                </div>
+              )}
 
-                      <div>
-                        <h3>{community.name}</h3>
-                        <p>
-                          {community.description ||
-                            `Created by ${community.creator || "Unknown"}`}
-                        </p>
-                      </div>
+              <div className="communities-top-grid">
+                <form
+                  className="create-community-card"
+                  onSubmit={handleCreateCommunity}
+                >
+                  <div className="card-icon green">
+                    <FaPlus />
+                  </div>
+
+                  <div>
+                    <h3>Create Community</h3>
+                    <p>
+                      Start a group for your campus, family, friends, or
+                      workplace.
+                    </p>
+                  </div>
+
+                  <input
+                    type="text"
+                    value={newCommunityName}
+                    onChange={(e) => setNewCommunityName(e.target.value)}
+                    placeholder="Example: Green Campus"
+                  />
+
+                  <button type="submit" disabled={actionLoading}>
+                    {actionLoading ? "Creating..." : "Create Community"}
+                  </button>
+                </form>
+
+                <div className="community-info-card">
+                  <div className="card-icon blue">
+                    <FaLeaf />
+                  </div>
+
+                  <h3>Community Climate Action</h3>
+                  <p>
+                    Communities help users stay motivated through shared goals,
+                    chat, following, and social accountability.
+                  </p>
+
+                  <div className="info-stats">
+                    <div>
+                      <strong>{communities.length}</strong>
+                      <span>Total Communities</span>
                     </div>
 
-                    <div className="community-meta">
-                      <div>
-                        <FaUsers />
-                        <span>{community.members_count} members</span>
-                      </div>
-
-                      <div>
-                        <FaBullseye />
-                        <span>{community.goals_count} goals</span>
-                      </div>
-
-                      {community.role === "admin" && (
-                        <div>
-                          <FaUserShield />
-                          <span>Admin</span>
-                        </div>
-                      )}
+                    <div>
+                      <strong>
+                        {
+                          communities.filter((community) => community.is_member)
+                            .length
+                        }
+                      </strong>
+                      <span>Joined</span>
                     </div>
 
-                    <div className="community-actions">
+                    <div>
+                      <strong>{followingUsers.length}</strong>
+                      <span>Following</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="communities-content-grid">
+                <section className="communities-list-card">
+                  <div className="section-title community-list-header">
+                    <div>
+                      <h2>Available Communities</h2>
+                      <p>Browse, filter, and join sustainability groups.</p>
+                    </div>
+
+                    <div className="community-filters">
                       <button
-                        className="btn-outline"
-                        onClick={() => loadCommunityDetails(community.id)}
+                        className={communityFilter === "all" ? "active" : ""}
+                        onClick={() => setCommunityFilter("all")}
+                        type="button"
                       >
-                        View
+                        All
                       </button>
 
-                      {!community.is_member ? (
-                        <button
-                          className="btn-green"
-                          onClick={() => handleJoin(community.id)}
-                          disabled={actionLoading}
-                        >
-                          Join
-                        </button>
-                      ) : community.role !== "admin" ? (
-                        <button
-                          className="btn-danger"
-                          onClick={() => handleLeave(community.id)}
-                          disabled={actionLoading}
-                        >
-                          Leave
-                        </button>
-                      ) : (
-                        <button className="btn-admin" disabled>
-                          Admin
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+                      <button
+                        className={
+                          communityFilter === "joined" ? "active" : ""
+                        }
+                        onClick={() => setCommunityFilter("joined")}
+                        type="button"
+                      >
+                        Joined
+                      </button>
 
-            <section className="community-details-card">
-              {!selectedCommunity ? (
-                <div className="details-empty">
-                  <FaUsers />
-                  <h3>Select a community</h3>
-                  <p>
-                    Click “View” on a community to see its members, shared
-                    goals, and chat.
-                  </p>
-                </div>
-              ) : detailsLoading ? (
-                <PageLoader text="Loading community..." />
-              ) : (
-                <>
-                  <div className="community-details-header">
-                    <div className="community-title-row">
-                      <div className="community-large-avatar">
-                        {selectedCommunity.image ? (
-                          <img
-                            src={getImageSrc(selectedCommunity.image)}
-                            alt={selectedCommunity.name}
-                          />
-                        ) : (
-                          <FaUsers />
-                        )}
-                      </div>
-
-                      <div>
-                        <h2>{selectedCommunity.name}</h2>
-                        <p>
-                          {selectedCommunity.description ||
-                            `Created by ${
-                              selectedCommunity.creator?.name ||
-                              selectedCommunity.creator ||
-                              "Unknown"
-                            }`}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="community-header-actions">
-                      {selectedSummary?.role && (
-                        <span className="role-pill">
-                          {selectedSummary.role}
-                        </span>
-                      )}
-
-                      {isSelectedCreator && (
-                        <button
-                          className="community-edit-btn"
-                          onClick={() => setEditingCommunity(!editingCommunity)}
-                        >
-                          <FaEdit /> Settings
-                        </button>
-                      )}
+                      <button
+                        className={
+                          communityFilter === "created" ? "active" : ""
+                        }
+                        onClick={() => setCommunityFilter("created")}
+                        type="button"
+                      >
+                        Created by Me
+                      </button>
                     </div>
                   </div>
 
-                  {isSelectedCreator && editingCommunity && (
-                    <form
-                      className="community-settings-card"
-                      onSubmit={handleSaveCommunitySettings}
-                    >
-                      <div className="settings-card-title">
-                        <h3>Community Settings</h3>
-                        <p>Edit the community name, description, and image.</p>
-                      </div>
+                  <div className="community-search-box">
+                    <FaSearch />
+                    <input
+                      type="text"
+                      value={communitySearch}
+                      onChange={(e) => setCommunitySearch(e.target.value)}
+                      placeholder="Search communities..."
+                    />
+                  </div>
 
-                      <div className="community-image-upload-row">
-                        <div className="community-settings-image">
-                          {selectedCommunity.image ? (
-                            <img
-                              src={getImageSrc(selectedCommunity.image)}
-                              alt={selectedCommunity.name}
-                            />
-                          ) : (
-                            <FaImage />
+                  {filteredCommunities.length === 0 && (
+                    <p className="empty-text">
+                      No communities found for this filter.
+                    </p>
+                  )}
+
+                  <div className="communities-list">
+                    {filteredCommunities.map((community) => (
+                      <div
+                        className={`community-card ${
+                          selectedCommunity?.id === community.id
+                            ? "selected"
+                            : ""
+                        }`}
+                        key={community.id}
+                      >
+                        <div className="community-card-top">
+                          <div className="community-avatar">
+                            {community.image ? (
+                              <img
+                                src={getImageSrc(community.image)}
+                                alt={community.name}
+                              />
+                            ) : (
+                              <FaUsers />
+                            )}
+                          </div>
+
+                          <div>
+                            <h3>{community.name}</h3>
+                            <p>
+                              {community.description ||
+                                `Created by ${community.creator || "Unknown"}`}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="community-meta">
+                          <div>
+                            <FaUsers />
+                            <span>{community.members_count} members</span>
+                          </div>
+
+                          <div>
+                            <FaBullseye />
+                            <span>{community.goals_count} goals</span>
+                          </div>
+
+                          {community.role === "admin" && (
+                            <div>
+                              <FaUserShield />
+                              <span>Admin</span>
+                            </div>
                           )}
                         </div>
 
-                        <label className="community-upload-btn">
-                          Upload Image
-                          <input
-                            type="file"
-                            hidden
-                            accept="image/*"
-                            onChange={handleCommunityImageUpload}
-                            disabled={actionLoading}
-                          />
-                        </label>
-                      </div>
-
-                      <input
-                        type="text"
-                        value={editCommunityName}
-                        onChange={(e) => setEditCommunityName(e.target.value)}
-                        placeholder="Community name"
-                      />
-
-                      <textarea
-                        value={editCommunityDescription}
-                        onChange={(e) =>
-                          setEditCommunityDescription(e.target.value)
-                        }
-                        placeholder="Community description..."
-                        rows="4"
-                      />
-
-                      <div className="community-settings-actions">
-                        <button type="submit" disabled={actionLoading}>
-                          <FaSave /> {actionLoading ? "Saving..." : "Save"}
-                        </button>
-
-                        <button
-                          type="button"
-                          className="btn-outline"
-                          onClick={() => setEditingCommunity(false)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </form>
-                  )}
-
-                  {!isSelectedMember && (
-                    <div className="join-required-card">
-                      <FaUsers />
-                      <div>
-                        <h3>Join to interact</h3>
-                        <p>
-                          You can view this community, but you need to join it
-                          to chat and share achievements.
-                        </p>
-                      </div>
-                      <button
-                        className="btn-green"
-                        onClick={() => handleJoin(selectedCommunity.id)}
-                      >
-                        Join Community
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="details-main-grid">
-                    <div>
-                      <div className="details-section">
-                        <h3>Members</h3>
-
-                        <div className="members-list">
-                          {(selectedCommunity.members || []).map((member) => (
-                            <div className="member-row" key={member.id}>
-                              <div
-                                className={`member-avatar ${
-                                  member.is_active ? "active" : "offline"
-                                }`}
-                              >
-                                {member.profile_picture ? (
-                                  <img
-                                    src={getImageSrc(member.profile_picture)}
-                                    alt={member.name}
-                                  />
-                                ) : (
-                                  getInitials(member.name)
-                                )}
-                              </div>
-
-                              <div className="member-info">
-                                <strong>{member.name}</strong>
-                                <span>{member.email}</span>
-                                <span
-                                  className={
-                                    member.is_active
-                                      ? "active-text"
-                                      : "offline-text"
-                                  }
-                                >
-                                  {member.is_active ? "Active now" : "Offline"}
-                                </span>
-                              </div>
-
-                              <small>{member.pivot?.role || "member"}</small>
-
-                              {isSelectedMember && (
-                                <div className="member-action-buttons">
-                                  {isCurrentUser(member.id) ? (
-                                    <button className="follow-btn me" disabled>
-                                      Me
-                                    </button>
-                                  ) : (
-                                    <button
-                                      className={`follow-btn ${
-                                        isFollowing(member.id) ? "following" : ""
-                                      }`}
-                                      onClick={() => handleFollowToggle(member)}
-                                      disabled={actionLoading}
-                                    >
-                                      {isFollowing(member.id) ? (
-                                        <>
-                                          <FaUserCheck /> Following
-                                        </>
-                                      ) : (
-                                        <>
-                                          <FaUserPlus /> Follow
-                                        </>
-                                      )}
-                                    </button>
-                                  )}
-
-                                  {isSelectedCreator &&
-                                    !isCurrentUser(member.id) && (
-                                      <button
-                                        className="remove-member-btn"
-                                        onClick={() =>
-                                          handleRemoveMember(member)
-                                        }
-                                        disabled={actionLoading}
-                                      >
-                                        Remove
-                                      </button>
-                                    )}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="details-section">
-                        <h3>Community Goals</h3>
-
-                        {selectedCommunity.goals?.length === 0 && (
-                          <p className="empty-text">No goals added yet.</p>
-                        )}
-
-                        <div className="goals-list">
-                          {(selectedCommunity.goals || []).map((goal) => (
-                            <div className="goal-row-card" key={goal.id}>
-                              <FaBullseye />
-                              <span>{goal.goal_description}</span>
-                            </div>
-                          ))}
-                        </div>
-
-                        {isSelectedCreator && (
-                          <form
-                            className="add-goal-form"
-                            onSubmit={handleAddGoal}
+                        <div className="community-actions">
+                          <button
+                            className="btn-outline"
+                            onClick={() => loadCommunityDetails(community.id)}
                           >
-                            <input
-                              type="text"
-                              value={newGoal}
-                              onChange={(e) => setNewGoal(e.target.value)}
-                              placeholder="Add a shared goal..."
-                            />
+                            View
+                          </button>
 
-                            <button type="submit" disabled={actionLoading}>
-                              Add Goal
-                            </button>
-                          </form>
-                        )}
-                      </div>
-
-                      {isSelectedMember && (
-                        <div className="share-panel">
-                          <div>
-                            <h3>
-                              <FaTrophy /> Share Achievement
-                            </h3>
-                            <p>
-                              Share your progress inside the community or copy
-                              it for social media.
-                            </p>
-                          </div>
-
-                          <div className="share-actions">
+                          {!community.is_member ? (
                             <button
-                              className="share-btn green"
-                              onClick={handleShareAchievementToChat}
+                              className="btn-green"
+                              onClick={() => handleJoin(community.id)}
                               disabled={actionLoading}
                             >
-                              <FaComments /> To Chat
+                              Join
                             </button>
-
+                          ) : community.role !== "admin" ? (
                             <button
-                              className="share-btn"
-                              onClick={handleCopyAchievement}
+                              className="btn-danger"
+                              onClick={() => handleLeave(community.id)}
+                              disabled={actionLoading}
                             >
-                              <FaCopy /> Instagram Copy
+                              Leave
                             </button>
-
-                            <button
-                              className="share-btn facebook"
-                              onClick={handleFacebookShare}
-                            >
-                              <FaFacebookF /> Facebook
+                          ) : (
+                            <button className="btn-admin" disabled>
+                              Admin
                             </button>
-
-                            <button
-                              className="share-btn"
-                              onClick={handleNativeShare}
-                            >
-                              <FaShareAlt /> Share
-                            </button>
-                          </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
 
-                    {isSelectedMember && (
-                      <div className="chat-card">
-                        <div className="chat-header whatsapp-style">
-                          <div className="chat-community-avatar">
+                <section className="community-details-card">
+                  {!selectedCommunity ? (
+                    <div className="details-empty">
+                      <FaUsers />
+                      <h3>Select a community</h3>
+                      <p>
+                        Click “View” on a community to see its members, shared
+                        goals, and chat.
+                      </p>
+                    </div>
+                  ) : detailsLoading ? (
+                    <InlineLoader
+                      text="Loading community..."
+                      subtext="Opening details and chat without leaving this page."
+                    />
+                  ) : (
+                    <>
+                      <div className="community-details-header">
+                        <div className="community-title-row">
+                          <div className="community-large-avatar">
                             {selectedCommunity.image ? (
                               <img
                                 src={getImageSrc(selectedCommunity.image)}
@@ -1108,149 +828,470 @@ export default function Communities() {
                           </div>
 
                           <div>
-                            <h3>{selectedCommunity.name}</h3>
+                            <h2>{selectedCommunity.name}</h2>
                             <p>
-                              {selectedCommunity.members?.length || 0} members ·{" "}
-                              {
-                                (selectedCommunity.members || []).filter(
-                                  (member) => member.is_active
-                                ).length
-                              }{" "}
-                              active now
+                              {selectedCommunity.description ||
+                                `Created by ${
+                                  selectedCommunity.creator?.name ||
+                                  selectedCommunity.creator ||
+                                  "Unknown"
+                                }`}
                             </p>
                           </div>
                         </div>
 
-                        <div className="messages-list">
-                          {messages.length === 0 && (
-                            <p className="empty-text">
-                              No messages yet. Start the conversation.
-                            </p>
+                        <div className="community-header-actions">
+                          {selectedSummary?.role && (
+                            <span className="role-pill">
+                              {selectedSummary.role}
+                            </span>
                           )}
 
-                          {messages.map((message) => {
-                            const isMine =
-                              Number(message.user?.id) ===
-                              Number(currentUser?.id);
-
-                            return (
-                              <div
-                                className={`message-row ${
-                                  isMine ? "mine" : "theirs"
-                                } ${
-                                  message.type === "achievement"
-                                    ? "achievement"
-                                    : ""
-                                }`}
-                                key={message.id}
-                              >
-                                {!isMine && (
-                                  <div className="message-avatar-wrapper">
-                                    <div className="message-avatar">
-                                      {message.user?.profile_picture ? (
-                                        <img
-                                          src={getImageSrc(
-                                            message.user.profile_picture
-                                          )}
-                                          alt={message.user?.name || "User"}
-                                        />
-                                      ) : (
-                                        getInitials(message.user?.name)
-                                      )}
-                                    </div>
-                                    <span
-                                      className={`online-dot ${
-                                        message.user?.is_active
-                                          ? "active"
-                                          : "offline"
-                                      }`}
-                                    ></span>
-                                  </div>
-                                )}
-
-                                <div className="message-bubble">
-                                  {!isMine && (
-                                    <div className="message-sender">
-                                      {message.user?.name || "User"}
-                                    </div>
-                                  )}
-
-                                  <p>{message.message}</p>
-
-                                  {message.type === "achievement" && (
-                                    <div className="achievement-box">
-                                      <FaTrophy />
-                                      <div>
-                                        <strong>
-                                          {message.achievement_data
-                                            ?.total_carbon_tracked || 0}{" "}
-                                          kg CO2e tracked
-                                        </strong>
-                                        <span>
-                                          {message.achievement_data
-                                            ?.activities_count || 0}{" "}
-                                          activities logged
-                                        </span>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  <div className="message-meta-line">
-                                    <span>{message.created_at}</span>
-
-                                    {isMine && (
-                                      <button
-                                        type="button"
-                                        className={`delivery-status ${
-                                          message.is_read_by_everyone
-                                            ? "read"
-                                            : ""
-                                        }`}
-                                        title={
-                                          message.is_read_by_everyone
-                                            ? "Read by everyone"
-                                            : `${
-                                                message.read_by_count || 0
-                                              }/${
-                                                message.total_other_members || 0
-                                              } members read`
-                                        }
-                                        onClick={() =>
-                                          handleOpenReaders(message)
-                                        }
-                                      >
-                                        ✓✓
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
+                          {isSelectedCreator && (
+                            <button
+                              className="community-edit-btn"
+                              onClick={() =>
+                                setEditingCommunity(!editingCommunity)
+                              }
+                            >
+                              <FaEdit /> Settings
+                            </button>
+                          )}
                         </div>
+                      </div>
 
+                      {isSelectedCreator && editingCommunity && (
                         <form
-                          className="chat-form"
-                          onSubmit={handleSendMessage}
+                          className="community-settings-card"
+                          onSubmit={handleSaveCommunitySettings}
                         >
+                          <div className="settings-card-title">
+                            <h3>Community Settings</h3>
+                            <p>
+                              Edit the community name, description, and image.
+                            </p>
+                          </div>
+
+                          <div className="community-image-upload-row">
+                            <div className="community-settings-image">
+                              {selectedCommunity.image ? (
+                                <img
+                                  src={getImageSrc(selectedCommunity.image)}
+                                  alt={selectedCommunity.name}
+                                />
+                              ) : (
+                                <FaImage />
+                              )}
+                            </div>
+
+                            <label className="community-upload-btn">
+                              Upload Image
+                              <input
+                                type="file"
+                                hidden
+                                accept="image/*"
+                                onChange={handleCommunityImageUpload}
+                                disabled={actionLoading}
+                              />
+                            </label>
+                          </div>
+
                           <input
                             type="text"
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="Write a message..."
+                            value={editCommunityName}
+                            onChange={(e) =>
+                              setEditCommunityName(e.target.value)
+                            }
+                            placeholder="Community name"
                           />
 
-                          <button type="submit" disabled={actionLoading}>
-                            <FaPaperPlane />
-                          </button>
+                          <textarea
+                            value={editCommunityDescription}
+                            onChange={(e) =>
+                              setEditCommunityDescription(e.target.value)
+                            }
+                            placeholder="Community description..."
+                            rows="4"
+                          />
+
+                          <div className="community-settings-actions">
+                            <button type="submit" disabled={actionLoading}>
+                              <FaSave />{" "}
+                              {actionLoading ? "Saving..." : "Save"}
+                            </button>
+
+                            <button
+                              type="button"
+                              className="btn-outline"
+                              onClick={() => setEditingCommunity(false)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </form>
+                      )}
+
+                      {!isSelectedMember && (
+                        <div className="join-required-card">
+                          <FaUsers />
+                          <div>
+                            <h3>Join to interact</h3>
+                            <p>
+                              You can view this community, but you need to join
+                              it to chat and share achievements.
+                            </p>
+                          </div>
+                          <button
+                            className="btn-green"
+                            onClick={() => handleJoin(selectedCommunity.id)}
+                          >
+                            Join Community
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="details-main-grid">
+                        <div>
+                          <div className="details-section">
+                            <h3>Members</h3>
+
+                            <div className="members-list">
+                              {(selectedCommunity.members || []).map(
+                                (member) => (
+                                  <div className="member-row" key={member.id}>
+                                    <div
+                                      className={`member-avatar ${
+                                        member.is_active ? "active" : "offline"
+                                      }`}
+                                    >
+                                      {member.profile_picture ? (
+                                        <img
+                                          src={getImageSrc(
+                                            member.profile_picture
+                                          )}
+                                          alt={member.name}
+                                        />
+                                      ) : (
+                                        getInitials(member.name)
+                                      )}
+                                    </div>
+
+                                    <div className="member-info">
+                                      <strong>{member.name}</strong>
+                                      <span>{member.email}</span>
+                                      <span
+                                        className={
+                                          member.is_active
+                                            ? "active-text"
+                                            : "offline-text"
+                                        }
+                                      >
+                                        {member.is_active
+                                          ? "Active now"
+                                          : "Offline"}
+                                      </span>
+                                    </div>
+
+                                    <small>{member.pivot?.role || "member"}</small>
+
+                                    {isSelectedMember && (
+                                      <div className="member-action-buttons">
+                                        {isCurrentUser(member.id) ? (
+                                          <button
+                                            className="follow-btn me"
+                                            disabled
+                                          >
+                                            Me
+                                          </button>
+                                        ) : (
+                                          <button
+                                            className={`follow-btn ${
+                                              isFollowing(member.id)
+                                                ? "following"
+                                                : ""
+                                            }`}
+                                            onClick={() =>
+                                              handleFollowToggle(member)
+                                            }
+                                            disabled={actionLoading}
+                                          >
+                                            {isFollowing(member.id) ? (
+                                              <>
+                                                <FaUserCheck /> Following
+                                              </>
+                                            ) : (
+                                              <>
+                                                <FaUserPlus /> Follow
+                                              </>
+                                            )}
+                                          </button>
+                                        )}
+
+                                        {isSelectedCreator &&
+                                          !isCurrentUser(member.id) && (
+                                            <button
+                                              className="remove-member-btn"
+                                              onClick={() =>
+                                                handleRemoveMember(member)
+                                              }
+                                              disabled={actionLoading}
+                                            >
+                                              Remove
+                                            </button>
+                                          )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="details-section">
+                            <h3>Community Goals</h3>
+
+                            {selectedCommunity.goals?.length === 0 && (
+                              <p className="empty-text">No goals added yet.</p>
+                            )}
+
+                            <div className="goals-list">
+                              {(selectedCommunity.goals || []).map((goal) => (
+                                <div className="goal-row-card" key={goal.id}>
+                                  <FaBullseye />
+                                  <span>{goal.goal_description}</span>
+                                </div>
+                              ))}
+                            </div>
+
+                            {isSelectedCreator && (
+                              <form
+                                className="add-goal-form"
+                                onSubmit={handleAddGoal}
+                              >
+                                <input
+                                  type="text"
+                                  value={newGoal}
+                                  onChange={(e) => setNewGoal(e.target.value)}
+                                  placeholder="Add a shared goal..."
+                                />
+
+                                <button type="submit" disabled={actionLoading}>
+                                  Add Goal
+                                </button>
+                              </form>
+                            )}
+                          </div>
+
+                          {isSelectedMember && (
+                            <div className="share-panel">
+                              <div>
+                                <h3>
+                                  <FaTrophy /> Share Achievement
+                                </h3>
+                                <p>
+                                  Share your progress inside the community or
+                                  copy it for social media.
+                                </p>
+                              </div>
+
+                              <div className="share-actions">
+                                <button
+                                  className="share-btn green"
+                                  onClick={handleShareAchievementToChat}
+                                  disabled={actionLoading}
+                                >
+                                  <FaComments /> To Chat
+                                </button>
+
+                                <button
+                                  className="share-btn"
+                                  onClick={handleCopyAchievement}
+                                >
+                                  <FaCopy /> Instagram Copy
+                                </button>
+
+                                <button
+                                  className="share-btn facebook"
+                                  onClick={handleFacebookShare}
+                                >
+                                  <FaFacebookF /> Facebook
+                                </button>
+
+                                <button
+                                  className="share-btn"
+                                  onClick={handleNativeShare}
+                                >
+                                  <FaShareAlt /> Share
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {isSelectedMember && (
+                          <div className="chat-card">
+                            <div className="chat-header whatsapp-style">
+                              <div className="chat-community-avatar">
+                                {selectedCommunity.image ? (
+                                  <img
+                                    src={getImageSrc(selectedCommunity.image)}
+                                    alt={selectedCommunity.name}
+                                  />
+                                ) : (
+                                  <FaUsers />
+                                )}
+                              </div>
+
+                              <div>
+                                <h3>{selectedCommunity.name}</h3>
+                                <p>
+                                  {selectedCommunity.members?.length || 0}{" "}
+                                  members ·{" "}
+                                  {
+                                    (selectedCommunity.members || []).filter(
+                                      (member) => member.is_active
+                                    ).length
+                                  }{" "}
+                                  active now
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="messages-list">
+                              {messages.length === 0 && (
+                                <p className="empty-text">
+                                  No messages yet. Start the conversation.
+                                </p>
+                              )}
+
+                              {messages.map((message) => {
+                                const isMine =
+                                  Number(message.user?.id) ===
+                                  Number(currentUser?.id);
+
+                                return (
+                                  <div
+                                    className={`message-row ${
+                                      isMine ? "mine" : "theirs"
+                                    } ${
+                                      message.type === "achievement"
+                                        ? "achievement"
+                                        : ""
+                                    }`}
+                                    key={message.id}
+                                  >
+                                    {!isMine && (
+                                      <div className="message-avatar-wrapper">
+                                        <div className="message-avatar">
+                                          {message.user?.profile_picture ? (
+                                            <img
+                                              src={getImageSrc(
+                                                message.user.profile_picture
+                                              )}
+                                              alt={message.user?.name || "User"}
+                                            />
+                                          ) : (
+                                            getInitials(message.user?.name)
+                                          )}
+                                        </div>
+                                        <span
+                                          className={`online-dot ${
+                                            message.user?.is_active
+                                              ? "active"
+                                              : "offline"
+                                          }`}
+                                        ></span>
+                                      </div>
+                                    )}
+
+                                    <div className="message-bubble">
+                                      {!isMine && (
+                                        <div className="message-sender">
+                                          {message.user?.name || "User"}
+                                        </div>
+                                      )}
+
+                                      <p>{message.message}</p>
+
+                                      {message.type === "achievement" && (
+                                        <div className="achievement-box">
+                                          <FaTrophy />
+                                          <div>
+                                            <strong>
+                                              {message.achievement_data
+                                                ?.total_carbon_tracked || 0}{" "}
+                                              kg CO2e tracked
+                                            </strong>
+                                            <span>
+                                              {message.achievement_data
+                                                ?.activities_count || 0}{" "}
+                                              activities logged
+                                            </span>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      <div className="message-meta-line">
+                                        <span>{message.created_at}</span>
+
+                                        {isMine && (
+                                          <button
+                                            type="button"
+                                            className={`delivery-status ${
+                                              message.is_read_by_everyone
+                                                ? "read"
+                                                : ""
+                                            }`}
+                                            title={
+                                              message.is_read_by_everyone
+                                                ? "Read by everyone"
+                                                : `${
+                                                    message.read_by_count || 0
+                                                  }/${
+                                                    message.total_other_members ||
+                                                    0
+                                                  } members read`
+                                            }
+                                            onClick={() =>
+                                              handleOpenReaders(message)
+                                            }
+                                          >
+                                            ✓✓
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            <form
+                              className="chat-form"
+                              onSubmit={handleSendMessage}
+                            >
+                              <input
+                                type="text"
+                                value={newMessage}
+                                onChange={(e) =>
+                                  setNewMessage(e.target.value)
+                                }
+                                placeholder="Write a message..."
+                              />
+
+                              <button type="submit" disabled={actionLoading}>
+                                <FaPaperPlane />
+                              </button>
+                            </form>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </>
-              )}
-            </section>
-          </div>
+                    </>
+                  )}
+                </section>
+              </div>
+            </>
+          )}
         </div>
 
         {readersModal && (

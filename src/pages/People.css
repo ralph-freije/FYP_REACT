@@ -507,3 +507,17 @@
     justify-content: flex-start;
   }
 }
+.follow-action.me,
+.profile-follow-btn.me {
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.follow-action.me:hover,
+.profile-follow-btn.me:hover {
+  transform: none;
+  background: #f1f5f9;
+  color: #64748b;
+}

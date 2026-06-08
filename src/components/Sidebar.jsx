@@ -19,14 +19,25 @@ import {
 } from "react-icons/fa";
 import "./Sidebar.css";
 
+const SIDEBAR_USER_CACHE_KEY = "ecotrack_sidebar_user";
+
 export default function Sidebar() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const cachedUser = localStorage.getItem(SIDEBAR_USER_CACHE_KEY);
+      return cachedUser ? JSON.parse(cachedUser) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
   const firstNotificationCheck = useRef(true);
+  const latestNotificationId = useRef(null);
 
   const getAvatarSrc = (src) => {
-    if (!src) return "/default-avatar.png";
+    if (!src) return null;
 
     if (src.startsWith("http://") || src.startsWith("https://")) {
       return src;
@@ -44,41 +55,66 @@ export default function Sidebar() {
       return `http://127.0.0.1:8000/storage/${src}`;
     }
 
-    return src;
+    return `http://127.0.0.1:8000/storage/${src}`;
   };
 
-const showDesktopNotification = (notification) => {
-  if (!("Notification" in window)) return;
-  if (Notification.permission !== "granted") return;
-  if (localStorage.getItem("ecotrack_desktop_notifications_enabled") !== "true") return;
-  if (!notification || !notification.id) return;
+  const getInitials = (name) => {
+    if (!name) return "U";
 
-  const desktopNotification = new Notification(notification.title || "EcoTrack", {
-    body: notification.message || "You have a new notification.",
-    icon: "/default-avatar.png",
-  });
-
-  desktopNotification.onclick = () => {
-    window.focus();
-
-    if (notification.data?.url) {
-      window.location.href = notification.data.url;
-    } else {
-      window.location.href = "/notifications";
-    }
+    return name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
   };
-};
+
+  const showDesktopNotification = (notification) => {
+    if (!("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+
+    const desktopNotificationsEnabled =
+      localStorage.getItem("ecotrack_desktop_notifications_enabled") === "true";
+
+    if (!desktopNotificationsEnabled) return;
+    if (!notification || !notification.id) return;
+
+    const desktopNotification = new Notification(
+      notification.title || "EcoTrack",
+      {
+        body: notification.message || "You have a new notification.",
+        icon: "/default-avatar.png",
+      }
+    );
+
+    desktopNotification.onclick = () => {
+      window.focus();
+
+      if (notification.data?.url) {
+        window.location.href = notification.data.url;
+      } else {
+        window.location.href = "/notifications";
+      }
+    };
+  };
 
   const loadUnreadCount = async () => {
     try {
       const res = await getUnreadNotificationCount();
       setUnreadCount(res.unread_count || 0);
     } catch (err) {
-      console.error("Failed to load unread notifications:", err);
+      if (err.response?.status !== 429) {
+        console.error("Failed to load unread notifications:", err);
+      }
     }
   };
 
   const checkLatestNotification = async () => {
+    const desktopNotificationsEnabled =
+      localStorage.getItem("ecotrack_desktop_notifications_enabled") === "true";
+
+    if (!desktopNotificationsEnabled) return;
+
     try {
       const res = await getNotifications("unread");
       const latest = res.data?.[0];
@@ -87,39 +123,106 @@ const showDesktopNotification = (notification) => {
 
       if (firstNotificationCheck.current) {
         firstNotificationCheck.current = false;
+        latestNotificationId.current = latest.id;
         return;
       }
 
+      if (latestNotificationId.current === latest.id) return;
+
+      latestNotificationId.current = latest.id;
       showDesktopNotification(latest);
     } catch (err) {
-      console.error("Failed to check latest notification:", err);
+      if (err.response?.status !== 429) {
+        console.error("Failed to check latest notification:", err);
+      }
     }
   };
 
   useEffect(() => {
-    const loadUser = async () => {
+    let cancelled = false;
+
+    const safeLoadUser = async () => {
       try {
         const res = await getProfile();
-        setUser(res.data.user);
+
+        if (!cancelled) {
+          const freshUser = res.data.user;
+          setUser(freshUser);
+          localStorage.setItem(
+            SIDEBAR_USER_CACHE_KEY,
+            JSON.stringify(freshUser)
+          );
+        }
       } catch (err) {
-        console.error("Failed to load profile:", err);
+        if (err.response?.status !== 429) {
+          console.error("Failed to load profile:", err);
+        }
       }
     };
 
-    loadUser();
+    safeLoadUser();
+
+    const handleProfileUpdated = () => {
+      safeLoadUser();
+    };
+
+    window.addEventListener("profile-updated", handleProfileUpdated);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("profile-updated", handleProfileUpdated);
+    };
   }, []);
 
   useEffect(() => {
     loadUnreadCount();
     checkLatestNotification();
 
-    const interval = setInterval(() => {
+    const refreshUnreadInterval = setInterval(() => {
+      loadUnreadCount();
+    }, 60000);
+
+    const desktopNotificationInterval = setInterval(() => {
+      checkLatestNotification();
+    }, 90000);
+
+    const handleNotificationsUpdated = () => {
       loadUnreadCount();
       checkLatestNotification();
-    }, 20000);
+    };
 
-    return () => clearInterval(interval);
-  }, [user?.id]);
+    const handleDesktopNotificationsUpdated = () => {
+      checkLatestNotification();
+    };
+
+    window.addEventListener("notifications-updated", handleNotificationsUpdated);
+    window.addEventListener(
+      "desktop-notifications-updated",
+      handleDesktopNotificationsUpdated
+    );
+
+    return () => {
+      clearInterval(refreshUnreadInterval);
+      clearInterval(desktopNotificationInterval);
+      window.removeEventListener(
+        "notifications-updated",
+        handleNotificationsUpdated
+      );
+      window.removeEventListener(
+        "desktop-notifications-updated",
+        handleDesktopNotificationsUpdated
+      );
+    };
+  }, []);
+
+  const avatarSrc = getAvatarSrc(
+    user?.profile?.profile_picture ||
+      user?.profile_picture ||
+      user?.avatar ||
+      null
+  );
+
+  const profileLink = user?.id ? `/people?user=${user.id}` : "/people";
 
   return (
     <aside className="sidebar">
@@ -234,21 +337,47 @@ const showDesktopNotification = (notification) => {
         )}
       </nav>
 
-      <div className="sidebar-profile">
-        <img
-          src={getAvatarSrc(user?.profile?.profile_picture)}
-          className="avatar"
-          alt="Profile"
-          onError={(e) => {
-            e.currentTarget.src = "/default-avatar.png";
-          }}
-        />
+      <Link
+        to={profileLink}
+        className="sidebar-profile sidebar-profile-clickable"
+        title="View profile"
+      >
+        <div className="sidebar-profile-avatar">
+          {avatarSrc ? (
+            <img
+              src={avatarSrc}
+              className="avatar"
+              alt="Profile"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
 
-        <div>
-          <div className="profile-name">{user?.name || "User"}</div>
-          <div className="profile-email">{user?.email}</div>
+                const fallback =
+                  e.currentTarget.parentElement.querySelector(
+                    ".sidebar-avatar-fallback"
+                  );
+
+                if (fallback) {
+                  fallback.style.display = "flex";
+                }
+              }}
+            />
+          ) : null}
+
+          <span
+            className="sidebar-avatar-fallback"
+            style={{ display: avatarSrc ? "none" : "flex" }}
+          >
+            {getInitials(user?.name)}
+          </span>
         </div>
-      </div>
+
+        <div className="sidebar-profile-text">
+          <div className="profile-name">{user?.name || "User"}</div>
+          <div className="profile-email">{user?.email || "View profile"}</div>
+        </div>
+
+        <span className="sidebar-profile-view">View</span>
+      </Link>
     </aside>
   );
 }
