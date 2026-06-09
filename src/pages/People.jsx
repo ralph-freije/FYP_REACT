@@ -153,7 +153,8 @@ export default function People() {
       setSelectedProfile(res.data);
     } catch (err) {
       console.error(err);
-      setError("Failed to load profile.");
+      setSelectedProfile(null);
+      setError(err.response?.data?.message || "Failed to load profile.");
     } finally {
       setProfileLoading(false);
     }
@@ -395,14 +396,16 @@ export default function People() {
 
                           <div className="person-info">
                             <strong>{user.name}</strong>
-                            <span>{user.email}</span>
-                            <small
-                              className={
-                                user.is_active ? "active-text" : "offline-text"
-                              }
-                            >
-                              {user.is_active ? "Active now" : "Offline"}
-                            </small>
+                            {user.email && <span>{user.email}</span>}
+                            {!user.online_status_hidden && (
+                              <small
+                                className={
+                                  user.is_active ? "active-text" : "offline-text"
+                                }
+                              >
+                                {user.is_active ? "Active now" : "Offline"}
+                              </small>
+                            )}
                           </div>
                         </button>
 
@@ -478,21 +481,25 @@ export default function People() {
 
                       <div className="profile-info-panel">
                         <h2>{selectedProfile.user.name}</h2>
-                        <p>{selectedProfile.user.email}</p>
+                        {selectedProfile.user.email && (
+                          <p>{selectedProfile.user.email}</p>
+                        )}
 
-                        <span
-                          className={
-                            selectedProfile.user.is_active
-                              ? "profile-status active"
-                              : "profile-status offline"
-                          }
-                        >
-                          {selectedProfile.user.is_active
-                            ? "Active now"
-                            : selectedProfile.user.last_seen_at
-                            ? `Last seen ${selectedProfile.user.last_seen_at}`
-                            : "Offline"}
-                        </span>
+                        {!selectedProfile.user.online_status_hidden && (
+                          <span
+                            className={
+                              selectedProfile.user.is_active
+                                ? "profile-status active"
+                                : "profile-status offline"
+                            }
+                          >
+                            {selectedProfile.user.is_active
+                              ? "Active now"
+                              : selectedProfile.user.last_seen_at
+                              ? `Last seen ${selectedProfile.user.last_seen_at}`
+                              : "Offline"}
+                          </span>
+                        )}
 
                         <div className="profile-badge-row">
                           {selectedProfile.user.is_mutual && (
@@ -560,35 +567,41 @@ export default function People() {
                       <div className="achievement-section">
                         <h3>Achievements</h3>
 
-                        <div className="achievement-grid">
-                          <div className="achievement-card">
-                            <FaLeaf />
-                            <strong>
-                              {selectedProfile.achievements
-                                ?.total_carbon_tracked || 0}{" "}
-                              kg
-                            </strong>
-                            <span>CO2e Tracked</span>
-                          </div>
+                        {selectedProfile.user.activity_stats_hidden ? (
+                          <p className="empty-text">
+                            This user has hidden their activity stats.
+                          </p>
+                        ) : (
+                          <div className="achievement-grid">
+                            <div className="achievement-card">
+                              <FaLeaf />
+                              <strong>
+                                {selectedProfile.achievements
+                                  ?.total_carbon_tracked || 0}{" "}
+                                kg
+                              </strong>
+                              <span>CO2e Tracked</span>
+                            </div>
 
-                          <div className="achievement-card">
-                            <FaRunning />
-                            <strong>
-                              {selectedProfile.achievements
-                                ?.activities_count || 0}
-                            </strong>
-                            <span>Activities</span>
-                          </div>
+                            <div className="achievement-card">
+                              <FaRunning />
+                              <strong>
+                                {selectedProfile.achievements
+                                  ?.activities_count || 0}
+                              </strong>
+                              <span>Activities</span>
+                            </div>
 
-                          <div className="achievement-card">
-                            <FaFire />
-                            <strong>
-                              {selectedProfile.achievements?.top_category ||
-                                "None"}
-                            </strong>
-                            <span>Top Category</span>
+                            <div className="achievement-card">
+                              <FaFire />
+                              <strong>
+                                {selectedProfile.achievements?.top_category ||
+                                  "None"}
+                              </strong>
+                              <span>Top Category</span>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </>
                   )}

@@ -39,23 +39,31 @@ export default function Sidebar() {
   const getAvatarSrc = (src) => {
     if (!src) return null;
 
-    if (src.startsWith("http://") || src.startsWith("https://")) {
-      return src;
+    const cleanSrc = String(src).trim();
+
+    if (!cleanSrc) return null;
+
+    if (cleanSrc.startsWith("http://") || cleanSrc.startsWith("https://")) {
+      return cleanSrc;
     }
 
-    if (src.startsWith("/storage/")) {
-      return `http://127.0.0.1:8000${src}`;
+    if (cleanSrc.startsWith("/storage/")) {
+      return `http://127.0.0.1:8000${cleanSrc}`;
     }
 
-    if (src.startsWith("storage/")) {
-      return `http://127.0.0.1:8000/${src}`;
+    if (cleanSrc.startsWith("storage/")) {
+      return `http://127.0.0.1:8000/${cleanSrc}`;
     }
 
-    if (src.startsWith("avatars/")) {
-      return `http://127.0.0.1:8000/storage/${src}`;
+    if (
+      cleanSrc.startsWith("profile_pictures/") ||
+      cleanSrc.startsWith("avatars/") ||
+      cleanSrc.startsWith("uploads/")
+    ) {
+      return `http://127.0.0.1:8000/storage/${cleanSrc}`;
     }
 
-    return `http://127.0.0.1:8000/storage/${src}`;
+    return null;
   };
 
   const getInitials = (name) => {
@@ -83,7 +91,7 @@ export default function Sidebar() {
       notification.title || "EcoTrack",
       {
         body: notification.message || "You have a new notification.",
-        icon: "/default-avatar.png",
+        icon: "/ecotrack-logo.png",
       }
     );
 
@@ -227,7 +235,9 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
-        <div className="logo-circle">🌱</div>
+        <div className="logo-circle">
+          <img src="/ecotrack-logo.png" alt="EcoTrack logo" />
+        </div>
 
         <div className="logo-text">
           <div className="logo-title">EcoTrack</div>
