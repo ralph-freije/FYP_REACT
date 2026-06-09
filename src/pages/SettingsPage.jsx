@@ -9,6 +9,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
 
   const getAvatarSrc = (src) => {
     if (!src) return null;
@@ -74,6 +75,8 @@ export default function SettingsPage() {
   }, []);
 
   const handleChange = (field, value) => {
+    setStatusMessage("");
+
     setProfile((prev) => ({
       ...prev,
       profile: {
@@ -94,6 +97,7 @@ export default function SettingsPage() {
     try {
       setUploading(true);
       setAvatarError(false);
+      setStatusMessage("");
 
       const uploadRes = await uploadAvatar(formData);
 
@@ -107,9 +111,10 @@ export default function SettingsPage() {
 
       await loadProfile();
       window.dispatchEvent(new Event("profile-updated"));
+      setStatusMessage("Profile photo updated.");
     } catch (err) {
       console.error(err);
-      alert("Failed to upload photo.");
+      setStatusMessage("Failed to upload photo.");
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -119,21 +124,41 @@ export default function SettingsPage() {
   const saveProfile = async () => {
     try {
       setSaving(true);
+      setStatusMessage("");
 
       const res = await updateProfile({
         name: profile.name,
         weekly_report: Boolean(profile.profile?.weekly_report),
         sustainability_alerts: Boolean(profile.profile?.sustainability_alerts),
+        community_notifications: Boolean(
+          profile.profile?.community_notifications
+        ),
+        message_notifications: Boolean(profile.profile?.message_notifications),
+        achievement_notifications: Boolean(
+          profile.profile?.achievement_notifications
+        ),
+        goal_reminders: Boolean(profile.profile?.goal_reminders),
         public_profile: Boolean(profile.profile?.public_profile),
+        show_activity_stats: Boolean(profile.profile?.show_activity_stats),
+        show_online_status: Boolean(profile.profile?.show_online_status),
+        show_email: Boolean(profile.profile?.show_email),
+        allow_private_messages: Boolean(profile.profile?.allow_private_messages),
+        allow_community_invites: Boolean(
+          profile.profile?.allow_community_invites
+        ),
       });
 
-      localStorage.setItem("ecotrack_sidebar_user", JSON.stringify(res.data.user));
+      setProfile(res.data.user);
+      localStorage.setItem(
+        "ecotrack_sidebar_user",
+        JSON.stringify(res.data.user)
+      );
       window.dispatchEvent(new Event("profile-updated"));
       setAvatarError(false);
-      alert("Profile updated");
+      setStatusMessage("Settings saved successfully.");
     } catch (err) {
       console.error(err);
-      alert("Failed to save profile.");
+      setStatusMessage("Failed to save settings.");
     } finally {
       setSaving(false);
     }
@@ -144,6 +169,24 @@ export default function SettingsPage() {
     sessionStorage.clear();
     window.location.href = "/login";
   };
+
+  const ToggleRow = ({ title, description, field }) => (
+    <div className="toggle">
+      <div>
+        <b>{title}</b>
+        <p>{description}</p>
+      </div>
+
+      <button
+        type="button"
+        className={`switch ${profile.profile?.[field] ? "active" : ""}`}
+        onClick={() => handleChange(field, !profile.profile?.[field])}
+        aria-label={title}
+      >
+        <span className="dot"></span>
+      </button>
+    </div>
+  );
 
   return (
     <div className="settings-layout">
@@ -159,12 +202,26 @@ export default function SettingsPage() {
           <>
             <div className="settings-header">
               <div>
+                <span className="settings-badge">Account Center</span>
                 <h1>Settings</h1>
                 <p>
-                  Manage your account preferences and climate impact visibility.
+                  Manage your profile, notification preferences, privacy, and
+                  account visibility.
                 </p>
               </div>
             </div>
+
+            {statusMessage && (
+              <div
+                className={`settings-status ${
+                  statusMessage.toLowerCase().includes("failed")
+                    ? "error"
+                    : "success"
+                }`}
+              >
+                {statusMessage}
+              </div>
+            )}
 
             <section className="settings-card">
               <div className="settings-card-header">
@@ -184,16 +241,19 @@ export default function SettingsPage() {
                   <div className="profile-pic-fallback">{getInitials()}</div>
                 )}
 
-                <label className="upload-btn">
-                  {uploading ? "Uploading..." : "Upload Photo"}
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    disabled={uploading}
-                  />
-                </label>
+                <div className="avatar-upload-actions">
+                  <label className="upload-btn">
+                    {uploading ? "Uploading..." : "Upload Photo"}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      disabled={uploading}
+                    />
+                  </label>
+                  <span>JPG, PNG, or WEBP up to 2MB.</span>
+                </div>
               </div>
 
               <div className="settings-form-grid">
@@ -217,79 +277,123 @@ export default function SettingsPage() {
             <section className="settings-card">
               <div className="settings-card-header">
                 <h3>Notification Preferences</h3>
-                <p>Control the sustainability notifications you receive.</p>
+                <p>Control which sustainability updates you receive.</p>
               </div>
 
-              <div className="toggle">
-                <div>
-                  <b>Weekly Impact Report</b>
-                  <p>Receive a summary every Monday.</p>
-                </div>
+              <div className="settings-two-column">
+                <ToggleRow
+                  title="Weekly Impact Report"
+                  description="Receive a summary of your climate impact every Monday."
+                  field="weekly_report"
+                />
 
-                <button
-                  type="button"
-                  className={`switch ${
-                    profile.profile?.weekly_report ? "active" : ""
-                  }`}
-                  onClick={() =>
-                    handleChange(
-                      "weekly_report",
-                      !profile.profile?.weekly_report
-                    )
-                  }
-                >
-                  <span className="dot"></span>
-                </button>
-              </div>
+                <ToggleRow
+                  title="Sustainability Alerts"
+                  description="Get alerts when your carbon footprint exceeds your target."
+                  field="sustainability_alerts"
+                />
 
-              <div className="toggle">
-                <div>
-                  <b>Sustainability Alerts</b>
-                  <p>Alerts when footprint exceeds target.</p>
-                </div>
+                <ToggleRow
+                  title="Community Notifications"
+                  description="Get notified when members join, leave, post, or update goals."
+                  field="community_notifications"
+                />
 
-                <button
-                  type="button"
-                  className={`switch ${
-                    profile.profile?.sustainability_alerts ? "active" : ""
-                  }`}
-                  onClick={() =>
-                    handleChange(
-                      "sustainability_alerts",
-                      !profile.profile?.sustainability_alerts
-                    )
-                  }
-                >
-                  <span className="dot"></span>
-                </button>
+                <ToggleRow
+                  title="Message Notifications"
+                  description="Receive notifications for private and community messages."
+                  field="message_notifications"
+                />
+
+                <ToggleRow
+                  title="Achievement Notifications"
+                  description="Be notified when you unlock personal or community achievements."
+                  field="achievement_notifications"
+                />
+
+                <ToggleRow
+                  title="Goal Reminders"
+                  description="Receive reminders about active personal goals."
+                  field="goal_reminders"
+                />
               </div>
             </section>
 
             <section className="settings-card">
               <div className="settings-card-header">
                 <h3>Privacy & Visibility</h3>
-                <p>Choose how your activity appears to other users.</p>
+                <p>Choose what other EcoTrack users can see about you.</p>
               </div>
 
-              <div className="toggle">
+              <div className="privacy-note">
+                These options control what your profile is allowed to show.
+                Some visibility enforcement may depend on public profile and
+                social features.
+              </div>
+
+              <div className="settings-two-column">
+                <ToggleRow
+                  title="Public Profile"
+                  description="Allow other users to open your profile page."
+                  field="public_profile"
+                />
+
+                <ToggleRow
+                  title="Show Activity Stats"
+                  description="Show CO2 tracked, activity count, and top category on your public profile."
+                  field="show_activity_stats"
+                />
+
+                <ToggleRow
+                  title="Show Online Status"
+                  description="Let others see if you are active now or offline."
+                  field="show_online_status"
+                />
+
+                <ToggleRow
+                  title="Show Email"
+                  description="Allow other users to see your email on profile and social cards."
+                  field="show_email"
+                />
+
+                <ToggleRow
+                  title="Allow Private Messages"
+                  description="Allow mutual followers to start or continue private chats with you."
+                  field="allow_private_messages"
+                />
+
+                <ToggleRow
+                  title="Allow Community Invites"
+                  description="Allow community members to invite you to sustainability groups."
+                  field="allow_community_invites"
+                />
+              </div>
+            </section>
+
+            <section className="settings-card">
+              <div className="settings-card-header">
+                <h3>Local Desktop Notifications</h3>
+                <p>
+                  This controls browser desktop notifications on this device
+                  only.
+                </p>
+              </div>
+
+              <div className="desktop-help-card">
                 <div>
-                  <b>Public Profile</b>
-                  <p>Allow others to see achievements.</p>
+                  <b>Desktop notification permission</b>
+                  <p>
+                    Manage this from the Notifications page. Browser permissions
+                    are stored locally and are not part of your backend profile.
+                  </p>
                 </div>
 
                 <button
                   type="button"
-                  className={`switch ${
-                    profile.profile?.public_profile ? "active" : ""
-                  }`}
-                  onClick={() =>
-                    handleChange(
-                      "public_profile",
-                      !profile.profile?.public_profile
-                    )
-                  }
+                  className="secondary-btn"
+                  onClick={() => (window.location.href = "/notifications")}
                 >
-                  <span className="dot"></span>
+                  Open Notifications
                 </button>
               </div>
             </section>
