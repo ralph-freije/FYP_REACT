@@ -464,3 +464,37 @@
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+@media (max-width: 600px) {
+  .notifications-main {
+    padding: 14px;
+  }
+
+  .notifications-header h1 {
+    font-size: 26px;
+  }
+
+  .notifications-header-actions,
+  .notifications-header-actions > * {
+    width: 100%;
+  }
+
+  .notifications-header-actions > * {
+    justify-content: center;
+  }
+
+  .notification-card {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .notification-actions button,
+  .notification-actions a {
+    flex: 1 1 140px;
+    justify-content: center;
+  }
+
+  .notification-time-wrap {
+    justify-content: flex-start;
+  }
+}

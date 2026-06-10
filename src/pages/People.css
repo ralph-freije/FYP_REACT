@@ -507,6 +507,73 @@
     justify-content: flex-start;
   }
 }
+
+@media (max-width: 900px) {
+  .people-main {
+    margin-left: 0;
+    width: 100%;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .people-main {
+    padding: 14px;
+  }
+
+  .people-header h1 {
+    font-size: 26px;
+  }
+
+  .people-list-card,
+  .profile-preview-card,
+  .people-stat-card {
+    border-radius: 20px;
+  }
+
+  .people-list-card {
+    padding: 16px;
+  }
+
+  .people-search {
+    height: auto;
+    min-height: 50px;
+    flex-wrap: wrap;
+    padding: 9px;
+  }
+
+  .people-search input {
+    min-width: 150px;
+  }
+
+  .people-search button {
+    flex: 1 0 100%;
+  }
+
+  .people-tabs {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .people-tabs button {
+    flex: 0 0 auto;
+  }
+
+  .person-card {
+    padding: 12px;
+  }
+
+  .follow-action {
+    justify-content: center;
+  }
+
+  .profile-info-panel,
+  .profile-numbers,
+  .achievement-section {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
 .follow-action.me,
 .profile-follow-btn.me {
   background: #f1f5f9;

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import InlineLoader from "../components/InlineLoader";
+import UserAvatar from "../components/UserAvatar";
 import { getProfile } from "../api/profileApi";
 import {
   getCommunities,
@@ -108,17 +109,6 @@ export default function Communities() {
   const clearAlerts = () => {
     setError("");
     setSuccess("");
-  };
-
-  const getInitials = (name) => {
-    if (!name) return "U";
-
-    return name
-      .split(" ")
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
   };
 
   const getImageSrc = (src) => {
@@ -959,22 +949,13 @@ export default function Communities() {
                               {(selectedCommunity.members || []).map(
                                 (member) => (
                                   <div className="member-row" key={member.id}>
-                                    <div
+                                    <UserAvatar
+                                      src={member.profile_picture}
+                                      name={member.name}
                                       className={`member-avatar ${
                                         member.is_active ? "active" : "offline"
                                       }`}
-                                    >
-                                      {member.profile_picture ? (
-                                        <img
-                                          src={getImageSrc(
-                                            member.profile_picture
-                                          )}
-                                          alt={member.name}
-                                        />
-                                      ) : (
-                                        getInitials(member.name)
-                                      )}
-                                    </div>
+                                    />
 
                                     <div className="member-info">
                                       <strong>{member.name}</strong>
@@ -1182,18 +1163,11 @@ export default function Communities() {
                                   >
                                     {!isMine && (
                                       <div className="message-avatar-wrapper">
-                                        <div className="message-avatar">
-                                          {message.user?.profile_picture ? (
-                                            <img
-                                              src={getImageSrc(
-                                                message.user.profile_picture
-                                              )}
-                                              alt={message.user?.name || "User"}
-                                            />
-                                          ) : (
-                                            getInitials(message.user?.name)
-                                          )}
-                                        </div>
+                                        <UserAvatar
+                                          src={message.user?.profile_picture}
+                                          name={message.user?.name}
+                                          className="message-avatar"
+                                        />
                                         <span
                                           className={`online-dot ${
                                             message.user?.is_active
@@ -1320,16 +1294,11 @@ export default function Communities() {
                 <div className="readers-list">
                   {readersModal.readers.map((reader) => (
                     <div className="reader-row" key={reader.id}>
-                      <div className="reader-avatar">
-                        {reader.profile_picture ? (
-                          <img
-                            src={getImageSrc(reader.profile_picture)}
-                            alt={reader.name}
-                          />
-                        ) : (
-                          getInitials(reader.name)
-                        )}
-                      </div>
+                      <UserAvatar
+                        src={reader.profile_picture}
+                        name={reader.name}
+                        className="reader-avatar"
+                      />
 
                       <div>
                         <strong>{reader.name}</strong>

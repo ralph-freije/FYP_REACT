@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { forgotPassword } from "../api/authApi";
-import "../styles/auth.css";
+import "./Login.css";
+
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -14,7 +15,7 @@ export default function ForgotPassword() {
     setMessage("");
 
     try {
-      const res = await forgotPassword(email);
+      await forgotPassword(email);
       setMessage("Check your email for reset instructions.");
     } catch (err) {
       setError(
@@ -24,39 +25,83 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="auth-wrapper">
+    <main className="auth-page">
+      <div className="auth-background-glow auth-glow-one"></div>
+      <div className="auth-background-glow auth-glow-two"></div>
 
-      <button className="back-btn" onClick={() => navigate("/login")}>
-        ←
-      </button>
-
-      <div className="auth-card">
-        <div className="auth-header">
-          <h2>Forgot Password</h2>
-          <p>Enter your email to receive a reset link.</p>
+      <header className="auth-brand">
+        <img src="/ecotrack-logo.png" alt="EcoTrack logo" />
+        <div>
+          <strong>EcoTrack</strong>
+          <span>Carbon Tracking</span>
         </div>
+      </header>
 
-        <form onSubmit={handleSubmit}>
+      <section className="auth-shell">
+        <aside className="auth-hero-panel">
+          <span className="auth-kicker">Account recovery</span>
+          <h1>Get back to tracking your impact.</h1>
+          <p>
+            Enter the email linked to your EcoTrack account and we will send
+            you instructions to reset your password securely.
+          </p>
 
-          <div className="form-group">
-            <label>Email Address</label>
-            <input
-              type="email"
-              placeholder="name@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+          <div className="auth-feature-grid">
+            <div>
+              <strong>Secure</strong>
+              <span>Email recovery</span>
+            </div>
+            <div>
+              <strong>Quick</strong>
+              <span>Simple reset</span>
+            </div>
+            <div>
+              <strong>Back</strong>
+              <span>To your goals</span>
+            </div>
+          </div>
+        </aside>
+
+        <section className="auth-card auth-card-login">
+          <div className="auth-card-logo">
+            <img src="/ecotrack-logo.png" alt="EcoTrack logo" />
           </div>
 
-          {error && <div className="error-msg">{error}</div>}
-          {message && <div className="success-msg">{message}</div>}
+          <div className="auth-header">
+            <h2>Forgot password?</h2>
+            <p>Enter your email to receive a password reset link.</p>
+          </div>
 
-          <button type="submit" className="submit-btn">
-            Send Reset Link →
-          </button>
-        </form>
-      </div>
-    </div>
+          {error && <div className="auth-alert error">{error}</div>}
+          {message && <div className="auth-alert success">{message}</div>}
+
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="auth-form-group">
+              <label htmlFor="forgot-email">Email address</label>
+              <input
+                id="forgot-email"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                required
+              />
+            </div>
+
+            <button type="submit" className="auth-submit-btn">
+              Send reset link
+            </button>
+          </form>
+
+          <p className="auth-switch-text">
+            Remembered your password?
+            <button type="button" onClick={() => navigate("/login")}>
+              Back to sign in
+            </button>
+          </p>
+        </section>
+      </section>
+    </main>
   );
 }

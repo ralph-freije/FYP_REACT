@@ -2027,3 +2027,63 @@ button:disabled {
     flex: 1;
   }
 }
+
+@media (max-width: 600px) {
+  .communities-main {
+    padding: 14px;
+  }
+
+  .communities-container,
+  .communities-top-grid,
+  .communities-content-grid,
+  .details-main-grid {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .communities-list-card,
+  .community-details-card,
+  .create-community-card,
+  .community-info-card {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .community-card {
+    padding: 16px;
+  }
+
+  .community-card-top,
+  .chat-header,
+  .member-row {
+    min-width: 0;
+  }
+
+  .community-filters button {
+    flex: 1 1 calc(50% - 10px);
+  }
+
+  .member-row {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .member-action-buttons {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .member-action-buttons button {
+    flex: 1;
+  }
+
+  .message-bubble {
+    max-width: 88%;
+  }
+
+  .chat-form {
+    gap: 8px;
+    padding: 10px;
+  }
+}

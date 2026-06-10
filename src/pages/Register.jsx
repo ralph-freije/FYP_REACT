@@ -110,7 +110,7 @@ export default function Register() {
           </div>
         </aside>
 
-        <section className="auth-card">
+        <section className="auth-card auth-card-register">
           <div className="auth-card-logo">
             <img src="/ecotrack-logo.png" alt="EcoTrack logo" />
           </div>

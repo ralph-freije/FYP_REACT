@@ -435,4 +435,27 @@
   .history-card-footer {
     flex-direction: column;
   }
+
+  .history-filters {
+    width: 100%;
+  }
+
+  .history-filters button {
+    flex: 1 1 calc(50% - 8px);
+  }
+}
+
+@media (max-width: 420px) {
+  .history-container {
+    padding: 14px;
+  }
+
+  .history-header h1 {
+    font-size: 26px;
+  }
+
+  .history-summary-card,
+  .history-timeline-card {
+    border-radius: 18px;
+  }
 }

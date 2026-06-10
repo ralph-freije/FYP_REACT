@@ -586,3 +586,72 @@
     max-height: none;
   }
 }
+
+@media (max-width: 900px) {
+  .messages-main {
+    margin-left: 0;
+    width: 100%;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .messages-main {
+    padding: 14px;
+  }
+
+  .messages-header h1 {
+    font-size: 26px;
+  }
+
+  .messages-grid {
+    gap: 16px;
+  }
+
+  .dm-sidebar-card {
+    padding: 16px;
+  }
+
+  .dm-sidebar-card,
+  .dm-chat-card {
+    border-radius: 20px;
+  }
+
+  .conversation-row {
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .dm-avatar {
+    width: 42px;
+    height: 42px;
+  }
+
+  .dm-chat-card {
+    min-height: 620px;
+  }
+
+  .dm-chat-header {
+    grid-template-columns: 42px minmax(0, 1fr);
+    padding: 14px;
+  }
+
+  .achievement-dm-btn {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+
+  .dm-messages {
+    padding: 16px 12px;
+  }
+
+  .dm-bubble {
+    max-width: 82%;
+  }
+
+  .dm-form {
+    padding: 11px;
+    gap: 8px;
+  }
+}

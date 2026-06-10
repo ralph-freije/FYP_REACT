@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import InlineLoader from "../components/InlineLoader";
+import Avatar from "../components/UserAvatar";
 import { getProfile } from "../api/profileApi";
 import {
   searchUsers,
@@ -46,79 +47,6 @@ export default function People() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
-  const getImageSrc = (src) => {
-    if (!src) return null;
-
-    if (src.startsWith("http://") || src.startsWith("https://")) {
-      return src;
-    }
-
-    if (src.startsWith("/storage/")) {
-      return `http://127.0.0.1:8000${src}`;
-    }
-
-    if (src.startsWith("storage/")) {
-      return `http://127.0.0.1:8000/${src}`;
-    }
-
-    return `http://127.0.0.1:8000/storage/${src}`;
-  };
-
-  const getInitials = (name) => {
-    if (!name) return "U";
-
-    return name
-      .split(" ")
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
-  };
-
-  const Avatar = ({ src, name, className }) => {
-    const safeSrc = getImageSrc(src);
-
-    return (
-      <div className={className}>
-        {safeSrc ? (
-          <>
-            <img
-              src={safeSrc}
-              alt={name || "User"}
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-
-                const fallback =
-                  e.currentTarget.parentElement.querySelector(
-                    ".avatar-fallback-text"
-                  );
-
-                if (fallback) {
-                  fallback.style.display = "flex";
-                }
-              }}
-            />
-
-            <span
-              className="avatar-fallback-text"
-              style={{
-                display: "none",
-                width: "100%",
-                height: "100%",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {getInitials(name)}
-            </span>
-          </>
-        ) : (
-          getInitials(name)
-        )}
-      </div>
-    );
-  };
 
   const clearAlerts = () => {
     setError("");

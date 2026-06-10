@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import InlineLoader from "../components/InlineLoader";
+import UserAvatar from "../components/UserAvatar";
 import {
   getPrivateConversations,
   getMutualUsers,
@@ -43,35 +44,6 @@ export default function Messages() {
       return new Date(b.updated_at || 0) - new Date(a.updated_at || 0);
     });
   }, [conversations]);
-
-  const getImageSrc = (src) => {
-    if (!src) return null;
-
-    if (src.startsWith("http://") || src.startsWith("https://")) {
-      return src;
-    }
-
-    if (src.startsWith("/storage/")) {
-      return `http://127.0.0.1:8000${src}`;
-    }
-
-    if (src.startsWith("storage/")) {
-      return `http://127.0.0.1:8000/${src}`;
-    }
-
-    return `http://127.0.0.1:8000/storage/${src}`;
-  };
-
-  const getInitials = (name) => {
-    if (!name) return "U";
-
-    return name
-      .split(" ")
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
-  };
 
   const clearAlerts = () => {
     setError("");
@@ -334,24 +306,15 @@ export default function Messages() {
                         key={conversation.id}
                         onClick={() => handleSelectConversation(conversation)}
                       >
-                        <div
+                        <UserAvatar
+                          src={conversation.other_user?.profile_picture}
+                          name={conversation.other_user?.name}
                           className={`dm-avatar ${
                             conversation.other_user?.is_active
                               ? "active"
                               : "offline"
                           }`}
-                        >
-                          {conversation.other_user?.profile_picture ? (
-                            <img
-                              src={getImageSrc(
-                                conversation.other_user.profile_picture
-                              )}
-                              alt={conversation.other_user.name}
-                            />
-                          ) : (
-                            getInitials(conversation.other_user?.name)
-                          )}
-                        </div>
+                        />
 
                         <div className="conversation-info">
                           <strong>{conversation.other_user?.name}</strong>
@@ -411,20 +374,13 @@ export default function Messages() {
                           key={user.id}
                           onClick={() => handleStartConversation(user)}
                         >
-                          <div
+                          <UserAvatar
+                            src={user.profile_picture}
+                            name={user.name}
                             className={`dm-avatar small ${
                               user.is_active ? "active" : "offline"
                             }`}
-                          >
-                            {user.profile_picture ? (
-                              <img
-                                src={getImageSrc(user.profile_picture)}
-                                alt={user.name}
-                              />
-                            ) : (
-                              getInitials(user.name)
-                            )}
-                          </div>
+                          />
 
                           <div>
                             <strong>{user.name}</strong>
@@ -451,22 +407,13 @@ export default function Messages() {
                   ) : (
                     <>
                       <div className="dm-chat-header">
-                        <div
+                        <UserAvatar
+                          src={selectedOtherUser?.profile_picture}
+                          name={selectedOtherUser?.name}
                           className={`dm-avatar ${
                             selectedOtherUser?.is_active ? "active" : "offline"
                           }`}
-                        >
-                          {selectedOtherUser?.profile_picture ? (
-                            <img
-                              src={getImageSrc(
-                                selectedOtherUser.profile_picture
-                              )}
-                              alt={selectedOtherUser.name}
-                            />
-                          ) : (
-                            getInitials(selectedOtherUser?.name)
-                          )}
-                        </div>
+                        />
 
                         <div>
                           <h2>{selectedOtherUser?.name}</h2>
@@ -511,24 +458,15 @@ export default function Messages() {
                               key={message.id}
                             >
                               {!message.is_mine && (
-                                <div
+                                <UserAvatar
+                                  src={message.user?.profile_picture}
+                                  name={message.user?.name}
                                   className={`dm-message-avatar ${
                                     message.user?.is_active
                                       ? "active"
                                       : "offline"
                                   }`}
-                                >
-                                  {message.user?.profile_picture ? (
-                                    <img
-                                      src={getImageSrc(
-                                        message.user.profile_picture
-                                      )}
-                                      alt={message.user.name}
-                                    />
-                                  ) : (
-                                    getInitials(message.user?.name)
-                                  )}
-                                </div>
+                                />
                               )}
 
                               <div className="dm-bubble">
@@ -626,16 +564,11 @@ export default function Messages() {
                 <div className="dm-readers-list">
                   {readersModal.readers.map((reader) => (
                     <div className="dm-reader-row" key={reader.id}>
-                      <div className="dm-avatar small">
-                        {reader.profile_picture ? (
-                          <img
-                            src={getImageSrc(reader.profile_picture)}
-                            alt={reader.name}
-                          />
-                        ) : (
-                          getInitials(reader.name)
-                        )}
-                      </div>
+                      <UserAvatar
+                        src={reader.profile_picture}
+                        name={reader.name}
+                        className="dm-avatar small"
+                      />
 
                       <div>
                         <strong>{reader.name}</strong>

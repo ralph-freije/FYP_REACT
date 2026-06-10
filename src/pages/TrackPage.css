@@ -425,4 +425,51 @@
     width: 100%;
     justify-content: center;
   }
+
+  .track-header-actions,
+  .track-header-actions button {
+    width: 100%;
+  }
+
+  .track-overview-card,
+  .route-tracker-card,
+  .track-card,
+  .track-info-card {
+    border-radius: 18px;
+  }
+
+  .route-card-header {
+    flex-direction: column;
+  }
+
+  .route-form-panel {
+    min-width: 0;
+    padding: 14px;
+  }
+
+  .route-results div {
+    gap: 12px;
+  }
+
+  .route-map-panel,
+  .route-map {
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 420px) {
+  .track-container {
+    padding: 14px;
+  }
+
+  .track-header h1 {
+    font-size: 26px;
+  }
+
+  .route-tracker-card,
+  .track-overview-card,
+  .track-card,
+  .track-info-card {
+    padding: 16px;
+  }
 }

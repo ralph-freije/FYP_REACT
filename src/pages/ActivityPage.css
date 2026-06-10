@@ -477,6 +477,33 @@
     align-items: flex-start;
     flex-direction: column;
   }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tab {
+    width: 100%;
+  }
+
+  .toggle-card {
+    padding: 13px;
+  }
+
+  .impact-value-row h2 {
+    font-size: 34px;
+  }
+}
+
+@media (max-width: 420px) {
+  .dashboard-container {
+    padding: 14px;
+  }
+
+  .activity-card {
+    padding: 18px 14px;
+  }
 }
 .distance-input {
   width: 80px;
