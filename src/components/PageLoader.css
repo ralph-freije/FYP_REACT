@@ -7,10 +7,11 @@
     radial-gradient(circle at top right, rgba(0,212,255,0.12), transparent 30%),
     radial-gradient(circle at top left, rgba(168,85,247,0.10), transparent 28%),
     #f4f8fc;
+  padding: 20px;
 }
 
 .page-loader-card {
-  width: 340px;
+  width: min(340px, 100%);
   background: rgba(255,255,255,0.88);
   border: 1px solid rgba(255,255,255,0.8);
   backdrop-filter: blur(18px);
@@ -93,5 +94,22 @@
   }
   50% {
     transform: scale(1.06);
+  }
+}
+
+@media (max-width: 420px) {
+  .page-loader-card {
+    padding: 32px 20px;
+    border-radius: 22px;
+  }
+
+  .loader-rings {
+    width: 126px;
+    height: 126px;
+  }
+
+  .loader-core {
+    inset: 36px;
+    font-size: 28px;
   }
 }

@@ -5,6 +5,7 @@ import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
 import OAuthSuccess from "../pages/OAuthSuccess";
 import SettingsPage from "../pages/SettingsPage";
+import ProtectedRoute from "../components/ProtectedRoute";
 import Dashboard from "../pages/Dashboard";
 import ActivityPage from "../pages/ActivityPage";
 import ActivityHistory from "../pages/ActivityHistory";
@@ -12,27 +13,35 @@ import AdminPage from "../pages/AdminPage";
 import Communities from "../pages/Communities";
 import People from "../pages/People";
 import Messages from "../pages/Messages";
-import AboutUs from "../pages/AboutUs";
-import ProtectedRoute from "../components/ProtectedRoute";
+import TrackPage from "../pages/TrackPage";
+import Notifications from "../pages/Notifications";
 
 function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/about-us" />} />
+        <Route path="/" element={<Navigate to="/login" />} />
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/oauth-success" element={<OAuthSuccess />} />
-        <Route path="/about-us" element={<AboutUs />} />
 
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/track"
+          element={
+            <ProtectedRoute>
+              <TrackPage />
             </ProtectedRoute>
           }
         />
@@ -78,6 +87,15 @@ function AppRouter() {
           element={
             <ProtectedRoute>
               <Messages />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
             </ProtectedRoute>
           }
         />
