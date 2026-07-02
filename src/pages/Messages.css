@@ -5,8 +5,8 @@
 }
 
 .messages-main {
-  margin-left: 260px;
-  width: calc(100% - 260px);
+  margin-left: 280px;
+  width: calc(100% - 280px);
   min-height: 100vh;
   padding: 28px;
 }
@@ -654,4 +654,45 @@
     padding: 11px;
     gap: 8px;
   }
+}
+
+.dm-challenge-share-box {
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  color: #065f46;
+}
+
+.dm-challenge-share-box img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+
+.dm-challenge-share-box > svg {
+  display: block;
+  margin: 20px auto 6px;
+  font-size: 34px;
+  color: #059669;
+}
+
+.dm-challenge-share-box div {
+  padding: 12px;
+  display: grid;
+  gap: 5px;
+}
+
+.dm-challenge-share-box strong {
+  color: #064e3b;
+}
+
+.dm-challenge-share-box span,
+.dm-challenge-share-box em {
+  color: #047857;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 750;
 }

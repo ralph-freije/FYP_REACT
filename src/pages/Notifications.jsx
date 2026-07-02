@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
+import DashboardBackButton from "../components/DashboardBackButton";
 import InlineLoader from "../components/InlineLoader";
 import {
   getNotifications,
@@ -303,6 +304,7 @@ export default function Notifications() {
       <Sidebar />
 
       <main className="notifications-main">
+        <DashboardBackButton />
         <div className="notifications-container">
           <div className="notifications-header">
             <div>

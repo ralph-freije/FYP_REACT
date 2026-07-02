@@ -2,9 +2,9 @@
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 100;
-  width: 250px;
+  width: 270px;
   min-height: 100vh;
-  padding: 24px 18px 18px;
+  padding: 24px 16px 18px;
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #073b2c 0%, #0b4937 100%);
@@ -14,10 +14,23 @@
 }
 
 .sidebar-logo {
+  direction: ltr;
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 4px 8px 22px;
+}
+
+.sidebar-logo-link {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 18px;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.sidebar-logo-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(1px);
 }
 
 .logo-circle {
@@ -63,8 +76,40 @@
   flex-direction: column;
   gap: 5px;
   overflow-y: auto;
+  overflow-x: hidden;
+  direction: rtl;
+  padding-left: 8px;
+  padding-right: 2px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  scrollbar-color: rgba(167, 243, 208, 0.42) transparent;
+  scrollbar-gutter: stable;
+}
+
+.sidebar-menu::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(167, 243, 208, 0.44), rgba(16, 185, 129, 0.24));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(167, 243, 208, 0.72), rgba(16, 185, 129, 0.45));
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.sidebar-menu::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .menu-item {
@@ -78,6 +123,9 @@
   text-decoration: none;
   font-size: 13px;
   font-weight: 800;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
   transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
 }
 
@@ -91,7 +139,7 @@
 .menu-item:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
-  transform: translateX(2px);
+  transform: translateX(1px);
 }
 
 .menu-item.active {
@@ -106,9 +154,13 @@
 
 .menu-item-left {
   min-width: 0;
+  flex: 1;
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .sidebar-notification-badge {
@@ -126,6 +178,7 @@
 }
 
 .sidebar-profile {
+  direction: ltr;
   margin-top: 16px;
   padding: 12px;
   border-radius: 18px;
@@ -292,9 +345,11 @@
     margin-bottom: 14px;
   }
 
-  .mobile-drawer-header > div {
+  .mobile-drawer-logo {
     display: grid;
     gap: 2px;
+    color: inherit;
+    text-decoration: none;
   }
 
   .mobile-drawer-header strong {
@@ -377,7 +432,8 @@
   .notifications-main,
   .settings-main,
   .communities-main,
-  .admin-main {
+  .admin-main,
+  .marketplace-main {
     padding-bottom: calc(104px + env(safe-area-inset-bottom)) !important;
   }
 }
@@ -397,5 +453,86 @@
     width: calc(100vw - 16px);
     margin: 8px;
     padding: 15px;
+  }
+}
+
+.sidebar-section {
+  direction: ltr;
+  display: grid;
+  gap: 5px;
+}
+
+.sidebar-section + .sidebar-section {
+  margin-top: 12px;
+}
+
+.sidebar-section-links {
+  display: grid;
+  gap: 5px;
+}
+
+.sidebar-section-separator {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 9px 9px 5px;
+  color: #a7f3d0;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.sidebar-section-separator span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.sidebar-section-separator span::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+}
+
+.sidebar-section-separator i {
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(167, 243, 208, 0.55), rgba(167, 243, 208, 0));
+}
+
+@media (max-width: 900px) {
+  .mobile-drawer-menu .sidebar-section {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .mobile-drawer-menu .sidebar-section + .sidebar-section {
+    margin-top: 8px;
+  }
+
+  .mobile-drawer-menu .sidebar-section-links {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .mobile-drawer-menu .sidebar-section-separator {
+    grid-column: 1 / -1;
+    margin-top: 4px;
+    padding: 10px 4px 2px;
+    color: #047857;
+  }
+
+  .mobile-drawer-menu .sidebar-section-separator i {
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.42), rgba(16, 185, 129, 0));
   }
 }

@@ -1,0 +1,49 @@
+.game-layout { display: flex; min-height: 100vh; background: #f4f7f5; }
+.game-main { margin-left: 280px; padding: 28px; width: 100%; min-height: 100vh; }
+.game-container { max-width: 1280px; margin: 0 auto; }
+.game-hero { background: linear-gradient(135deg, #064e3b, #10b981); color: white; border-radius: 30px; padding: 30px; display: flex; justify-content: space-between; gap: 24px; align-items: center; box-shadow: 0 16px 40px rgba(16, 185, 129, .22); }
+.game-kicker { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,.14); padding: 8px 12px; border-radius: 999px; font-weight: 900; margin-bottom: 14px; }
+.game-hero h1 { font-size: 36px; margin: 0 0 8px; letter-spacing: -.04em; }
+.game-hero p { margin: 0; opacity: .86; max-width: 620px; line-height: 1.6; }
+.player-card { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); border-radius: 24px; padding: 20px; min-width: 270px; display: flex; gap: 16px; align-items: center; }
+.player-card svg { font-size: 34px; color: #bbf7d0; }
+.player-card span { display: block; opacity: .72; font-weight: 800; }
+.player-card strong { display: block; font-size: 28px; }
+.level-bar { margin-top: 10px; height: 8px; background: rgba(255,255,255,.18); border-radius: 999px; overflow: hidden; }
+.level-bar i { display: block; height: 100%; background: #bbf7d0; border-radius: 999px; }
+.game-alert { margin: 18px 0; padding: 14px 16px; border-radius: 16px; font-weight: 800; }
+.game-alert.error { background: #fee2e2; color: #991b1b; }
+.game-alert.success { background: #dcfce7; color: #166534; }
+.game-stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 22px 0; }
+.game-stat-grid > div, .challenge-card, .leaderboard-card { background: white; border: 1px solid #e5e7eb; border-radius: 24px; box-shadow: 0 12px 30px rgba(15,23,42,.06); }
+.game-stat-grid > div { padding: 20px; display: grid; gap: 8px; }
+.game-stat-grid svg { color: #10b981; font-size: 24px; }
+.game-stat-grid span { color: #64748b; font-weight: 800; font-size: 13px; }
+.game-stat-grid strong { color: #0f172a; font-size: 28px; text-transform: capitalize; }
+.game-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr); gap: 20px; align-items: start; }
+.challenge-card { padding: 24px; grid-row: span 2; }
+.leaderboard-card { padding: 22px; }
+.game-section-title { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
+.game-section-title.compact { align-items: center; }
+.game-section-title h2 { margin: 0 0 5px; color: #0f172a; }
+.game-section-title p { margin: 0; color: #64748b; line-height: 1.5; }
+.game-section-title button, .challenge-actions button, .proof-form button { border: none; border-radius: 999px; padding: 11px 15px; font-weight: 900; cursor: pointer; background: #10b981; color: white; }
+.challenge-body { border: 1px solid #d1fae5; background: #f0fdf4; border-radius: 22px; padding: 22px; }
+.difficulty { display: inline-flex; padding: 6px 10px; border-radius: 999px; background: #064e3b; color: #bbf7d0; text-transform: uppercase; font-size: 11px; font-weight: 900; }
+.challenge-body h3 { margin: 14px 0 8px; color: #0f172a; font-size: 24px; }
+.challenge-body p { color: #475569; line-height: 1.6; }
+.challenge-reward { display: inline-flex; align-items: center; gap: 8px; color: #047857; font-weight: 900; }
+.challenge-actions { margin: 18px 0; }
+.challenge-actions .outline { background: white; color: #047857; border: 1px solid #bbf7d0; }
+.proof-form { margin-top: 16px; display: grid; gap: 12px; }
+.proof-form label { border: 2px dashed #86efac; border-radius: 18px; padding: 18px; display: flex; align-items: center; gap: 12px; color: #166534; font-weight: 900; cursor: pointer; background: white; }
+.proof-form input { display: none; }
+.ai-verdict { margin-top: 14px; padding: 12px; border-radius: 14px; background: white; color: #334155; font-size: 13px; font-weight: 700; }
+.challenge-empty { text-align: center; color: #64748b; padding: 34px; }
+.challenge-empty svg { color: #10b981; font-size: 42px; }
+.leaderboard-list { display: grid; gap: 10px; }
+.leaderboard-list > div { display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 12px; background: #f8fafc; border-radius: 16px; padding: 13px; }
+.leaderboard-list span { color: #10b981; font-weight: 900; }
+.leaderboard-list strong { color: #0f172a; }
+.leaderboard-list em { color: #64748b; font-style: normal; font-weight: 800; font-size: 12px; }
+@media (max-width: 980px) { .game-main { margin-left: 0; padding: 20px; padding-bottom: 92px; } .game-hero, .game-grid { grid-template-columns: 1fr; display: grid; } .game-stat-grid { grid-template-columns: 1fr; } .player-card { min-width: 0; } }

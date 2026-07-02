@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/Sidebar";
+import DashboardBackButton from "../components/DashboardBackButton";
 import InlineLoader from "../components/InlineLoader";
 import UserAvatar from "../components/UserAvatar";
 import { getProfile } from "../api/profileApi";
@@ -41,6 +42,9 @@ import {
   FaSave,
   FaImage,
   FaSearch,
+  FaMedal,
+  FaChartLine,
+  FaCalendarAlt,
 } from "react-icons/fa";
 import "./Communities.css";
 
@@ -51,7 +55,13 @@ export default function Communities() {
   const [messages, setMessages] = useState([]);
   const [followingUsers, setFollowingUsers] = useState([]);
   const [newCommunityName, setNewCommunityName] = useState("");
-  const [newGoal, setNewGoal] = useState("");
+  const [newGoal, setNewGoal] = useState({
+    title: "",
+    description: "",
+    category: "custom",
+    target: "",
+    score_reward: 300,
+  });
   const [newMessage, setNewMessage] = useState("");
   const [communityFilter, setCommunityFilter] = useState("all");
   const [communitySearch, setCommunitySearch] = useState("");
@@ -73,6 +83,16 @@ export default function Communities() {
   const isSelectedMember = selectedSummary?.is_member;
   const isSelectedCreator =
     Number(selectedCommunity?.created_by) === Number(currentUser?.id);
+
+  const selectedMonthlyGoals = useMemo(
+    () => selectedCommunity?.monthly_goals || selectedCommunity?.goals || [],
+    [selectedCommunity]
+  );
+
+  const selectedCommunityLeaderboard = selectedCommunity?.community_leaderboard || {
+    total_score: 0,
+    top_contributors: [],
+  };
 
   const filteredCommunities = useMemo(() => {
     const keyword = communitySearch.trim().toLowerCase();
@@ -109,6 +129,39 @@ export default function Communities() {
   const clearAlerts = () => {
     setError("");
     setSuccess("");
+  };
+
+  const getApiErrorMessage = (err, fallback) => {
+    const data = err?.response?.data;
+
+    if (typeof data === "string" && data.trim()) {
+      return data;
+    }
+
+    if (data?.message) {
+      return data.message;
+    }
+
+    if (data?.error) {
+      return data.error;
+    }
+
+    if (data?.errors) {
+      const firstError = Object.values(data.errors).flat().filter(Boolean)[0];
+
+      if (firstError) {
+        return firstError;
+      }
+    }
+
+    return fallback;
+  };
+
+  const handleGoalFormChange = (field, value) => {
+    setNewGoal((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
   };
 
   const getImageSrc = (src) => {
@@ -181,7 +234,7 @@ export default function Communities() {
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to load community details.");
+      setError(getApiErrorMessage(err, "Failed to load community details."));
     } finally {
       setDetailsLoading(false);
     }
@@ -258,7 +311,7 @@ export default function Communities() {
       await loadCommunities();
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Failed to create community.");
+      setError(getApiErrorMessage(err, "Failed to create community."));
     } finally {
       setActionLoading(false);
     }
@@ -274,7 +327,7 @@ export default function Communities() {
       await refreshAfterCommunityChange(id);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Failed to join community.");
+      setError(getApiErrorMessage(err, "Failed to join community."));
     } finally {
       setActionLoading(false);
     }
@@ -291,7 +344,7 @@ export default function Communities() {
       await refreshAfterCommunityChange(id);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Failed to leave community.");
+      setError(getApiErrorMessage(err, "Failed to leave community."));
     } finally {
       setActionLoading(false);
     }
@@ -316,7 +369,7 @@ export default function Communities() {
       await refreshAfterCommunityChange(selectedCommunity.id);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Failed to update community.");
+      setError(getApiErrorMessage(err, "Failed to update community."));
     } finally {
       setActionLoading(false);
     }
@@ -341,7 +394,7 @@ export default function Communities() {
       await refreshAfterCommunityChange(selectedCommunity.id);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Failed to upload image.");
+      setError(getApiErrorMessage(err, "Failed to upload image."));
     } finally {
       setActionLoading(false);
     }
@@ -351,21 +404,40 @@ export default function Communities() {
     e.preventDefault();
     clearAlerts();
 
-    if (!newGoal.trim() || !selectedCommunity) return;
+    if (!selectedCommunity) return;
+
+    const title = newGoal.title.trim();
+    const description = newGoal.description.trim();
+
+    if (!title && !description) {
+      setError("Add a title or description for the monthly goal.");
+      return;
+    }
 
     try {
       setActionLoading(true);
 
       await addCommunityGoal(selectedCommunity.id, {
-        goal_description: newGoal.trim(),
+        title,
+        description,
+        goal_description: description || title,
+        category: newGoal.category,
+        target: newGoal.target.trim(),
+        score_reward: Number(newGoal.score_reward) || 300,
       });
 
-      setNewGoal("");
-      setSuccess("Goal added successfully.");
+      setNewGoal({
+        title: "",
+        description: "",
+        category: "custom",
+        target: "",
+        score_reward: 300,
+      });
+      setSuccess("Monthly community goal added successfully.");
       await refreshAfterCommunityChange(selectedCommunity.id);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Failed to add goal.");
+      setError(getApiErrorMessage(err, "Failed to add monthly goal."));
     } finally {
       setActionLoading(false);
     }
@@ -388,7 +460,7 @@ export default function Communities() {
       await loadMessages(selectedCommunity.id, true);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Failed to send message.");
+      setError(getApiErrorMessage(err, "Failed to send message."));
     } finally {
       setActionLoading(false);
     }
@@ -406,7 +478,7 @@ export default function Communities() {
       await loadMessages(selectedCommunity.id, true);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Failed to share achievement.");
+      setError(getApiErrorMessage(err, "Failed to share achievement."));
     } finally {
       setActionLoading(false);
     }
@@ -488,7 +560,7 @@ export default function Communities() {
       await loadFollowingUsers();
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Follow action failed.");
+      setError(getApiErrorMessage(err, "Follow action failed."));
     } finally {
       setActionLoading(false);
     }
@@ -514,7 +586,7 @@ export default function Communities() {
       await refreshAfterCommunityChange(selectedCommunity.id);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Failed to remove member.");
+      setError(getApiErrorMessage(err, "Failed to remove member."));
     } finally {
       setActionLoading(false);
     }
@@ -547,6 +619,7 @@ export default function Communities() {
       <Sidebar />
 
       <main className="communities-main">
+        <DashboardBackButton />
         <div className="communities-container">
           <div className="communities-header">
             <div>
@@ -1028,38 +1101,234 @@ export default function Communities() {
                             </div>
                           </div>
 
-                          <div className="details-section">
-                            <h3>Community Goals</h3>
+                          <div className="details-section monthly-goals-section">
+                            <div className="monthly-goals-heading">
+                              <div>
+                                <h3>
+                                  <FaCalendarAlt /> Monthly Goals
+                                </h3>
+                                <p>
+                                  Normal member activities can automatically move
+                                  these goals forward when AI detects a match.
+                                </p>
+                              </div>
+                            </div>
 
-                            {selectedCommunity.goals?.length === 0 && (
-                              <p className="empty-text">No goals added yet.</p>
+                            {selectedMonthlyGoals.length === 0 && (
+                              <div className="community-goal-empty">
+                                <FaBullseye />
+                                <strong>No monthly goals yet</strong>
+                                <span>
+                                  Add a community goal so members can contribute
+                                  through normal activity submissions.
+                                </span>
+                              </div>
                             )}
 
-                            <div className="goals-list">
-                              {(selectedCommunity.goals || []).map((goal) => (
-                                <div className="goal-row-card" key={goal.id}>
-                                  <FaBullseye />
-                                  <span>{goal.goal_description}</span>
+                            <div className="goals-list monthly-goals-list">
+                              {selectedMonthlyGoals.map((goal) => (
+                                <div className="monthly-goal-card" key={goal.id}>
+                                  <div className="monthly-goal-top">
+                                    <div className="goal-icon-badge">
+                                      <FaBullseye />
+                                    </div>
+
+                                    <div>
+                                      <h4>{goal.title || goal.goal_description}</h4>
+                                      <p>{goal.description || goal.goal_description}</p>
+                                    </div>
+                                  </div>
+
+                                  <div className="goal-badges-row">
+                                    <span className="goal-category-badge">
+                                      {goal.category || "custom"}
+                                    </span>
+                                    <span className="goal-score-badge">
+                                      <FaMedal /> {goal.score_reward || 0} pts
+                                    </span>
+                                    <span className={`goal-status-badge ${goal.status}`}>
+                                      {goal.status || "active"}
+                                    </span>
+                                  </div>
+
+                                  <div className="monthly-goal-target">
+                                    <span>Target</span>
+                                    <strong>
+                                      {goal.target || "Reach 100% community progress"}
+                                    </strong>
+                                  </div>
+
+                                  <div className="monthly-goal-progress-line">
+                                    <div>
+                                      <span>Monthly progress</span>
+                                      <strong>{Math.round(goal.progress || 0)}%</strong>
+                                    </div>
+                                    <div className="community-progress-track">
+                                      <div
+                                        className="community-progress-fill"
+                                        style={{
+                                          width: `${Math.min(
+                                            100,
+                                            Math.max(0, Number(goal.progress) || 0)
+                                          )}%`,
+                                        }}
+                                      ></div>
+                                    </div>
+                                  </div>
+
+                                  <div className="contributors-leaderboard">
+                                    <div className="leaderboard-title">
+                                      <FaChartLine /> Contributors
+                                    </div>
+
+                                    {(goal.contributors || []).length === 0 ? (
+                                      <p className="empty-text small">
+                                        No activity contributions yet.
+                                      </p>
+                                    ) : (
+                                      (goal.contributors || []).map(
+                                        (contributor, index) => (
+                                          <div
+                                            className="contributor-row"
+                                            key={`${goal.id}-${contributor.user_id}`}
+                                          >
+                                            <span className="contributor-rank">
+                                              #{index + 1}
+                                            </span>
+                                            <UserAvatar
+                                              src={contributor.profile_picture}
+                                              name={contributor.name}
+                                              className="contributor-avatar"
+                                            />
+                                            <div>
+                                              <strong>{contributor.name}</strong>
+                                              <small>
+                                                {contributor.activities_count} activities · {Math.round(contributor.contribution_points || 0)}%
+                                              </small>
+                                            </div>
+                                            {contributor.score_awarded > 0 && (
+                                              <span className="awarded-points">
+                                                +{contributor.score_awarded}
+                                              </span>
+                                            )}
+                                          </div>
+                                        )
+                                      )
+                                    )}
+                                  </div>
                                 </div>
                               ))}
                             </div>
 
                             {isSelectedCreator && (
                               <form
-                                className="add-goal-form"
+                                className="add-goal-form monthly-goal-form"
                                 onSubmit={handleAddGoal}
                               >
-                                <input
-                                  type="text"
-                                  value={newGoal}
-                                  onChange={(e) => setNewGoal(e.target.value)}
-                                  placeholder="Add a shared goal..."
+                                <div className="goal-form-grid">
+                                  <input
+                                    type="text"
+                                    value={newGoal.title}
+                                    onChange={(e) =>
+                                      handleGoalFormChange("title", e.target.value)
+                                    }
+                                    placeholder="Monthly goal title"
+                                  />
+
+                                  <select
+                                    value={newGoal.category}
+                                    onChange={(e) =>
+                                      handleGoalFormChange("category", e.target.value)
+                                    }
+                                  >
+                                    <option value="custom">Custom</option>
+                                    <option value="transport">Transport</option>
+                                    <option value="diet">Diet</option>
+                                    <option value="energy">Energy</option>
+                                    <option value="shopping">Shopping</option>
+                                    <option value="waste">Waste</option>
+                                    <option value="water">Water</option>
+                                    <option value="reuse">Reuse</option>
+                                    <option value="carbon">Carbon</option>
+                                  </select>
+
+                                  <input
+                                    type="text"
+                                    value={newGoal.target}
+                                    onChange={(e) =>
+                                      handleGoalFormChange("target", e.target.value)
+                                    }
+                                    placeholder="Target, example: Complete 20 bus/walk activities"
+                                  />
+
+                                  <input
+                                    type="number"
+                                    min="50"
+                                    max="1000"
+                                    value={newGoal.score_reward}
+                                    onChange={(e) =>
+                                      handleGoalFormChange(
+                                        "score_reward",
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Reward points"
+                                  />
+                                </div>
+
+                                <textarea
+                                  value={newGoal.description}
+                                  onChange={(e) =>
+                                    handleGoalFormChange("description", e.target.value)
+                                  }
+                                  placeholder="Describe what members should do this month..."
+                                  rows="3"
                                 />
 
                                 <button type="submit" disabled={actionLoading}>
-                                  Add Goal
+                                  {actionLoading ? "Adding..." : "Add Monthly Goal"}
                                 </button>
                               </form>
+                            )}
+                          </div>
+
+
+
+                          <div className="details-section community-score-leaderboard-section">
+                            <div className="community-score-heading">
+                              <div>
+                                <h3><FaTrophy /> Community Leaderboard</h3>
+                                <p>Score earned by current members from completed goals and challenges.</p>
+                              </div>
+                              <span className="community-total-score-badge">
+                                {Number(selectedCommunityLeaderboard.total_score || 0).toLocaleString()} pts
+                              </span>
+                            </div>
+
+                            {(selectedCommunityLeaderboard.top_contributors || []).length === 0 ? (
+                              <div className="community-leaderboard-empty">
+                                <FaMedal />
+                                <strong>No score yet</strong>
+                                <span>When members complete goals or challenges, their points appear here.</span>
+                              </div>
+                            ) : (
+                              <div className="community-score-list">
+                                {(selectedCommunityLeaderboard.top_contributors || []).map((contributor, index) => (
+                                  <div className="community-score-row" key={`score-${contributor.user_id}`}>
+                                    <span className="community-score-rank">#{index + 1}</span>
+                                    <UserAvatar
+                                      src={contributor.profile_picture}
+                                      name={contributor.name}
+                                      className="community-score-avatar"
+                                    />
+                                    <div>
+                                      <strong>{contributor.name}</strong>
+                                      <small>Level {contributor.level || 1}</small>
+                                    </div>
+                                    <b>{Number(contributor.total_score || contributor.score || 0).toLocaleString()} pts</b>
+                                  </div>
+                                ))}
+                              </div>
                             )}
                           </div>
 
@@ -1155,7 +1424,7 @@ export default function Communities() {
                                     className={`message-row ${
                                       isMine ? "mine" : "theirs"
                                     } ${
-                                      message.type === "achievement"
+                                      message.type === "achievement" || message.type === "challenge_share"
                                         ? "achievement"
                                         : ""
                                     }`}
@@ -1201,6 +1470,21 @@ export default function Communities() {
                                                 ?.activities_count || 0}{" "}
                                               activities logged
                                             </span>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {message.type === "challenge_share" && (
+                                        <div className="community-challenge-share-box">
+                                          {message.achievement_data?.proof_image_url ? (
+                                            <img src={message.achievement_data.proof_image_url} alt={message.achievement_data?.title || "Challenge proof"} />
+                                          ) : (
+                                            <FaTrophy />
+                                          )}
+                                          <div>
+                                            <strong>{message.achievement_data?.title || "Completed challenge"}</strong>
+                                            <span>{message.achievement_data?.description || "Eco challenge completed."}</span>
+                                            <em>+{message.achievement_data?.score_awarded || 0} score · x{Number(message.achievement_data?.streak_multiplier || 1).toFixed(2)}</em>
                                           </div>
                                         </div>
                                       )}

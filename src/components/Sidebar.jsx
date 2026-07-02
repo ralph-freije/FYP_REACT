@@ -8,35 +8,59 @@ import {
 import {
   FaBars,
   FaBell,
+  FaBoxOpen,
   FaChartBar,
   FaClock,
   FaCog,
   FaComments,
+  FaClipboardList,
   FaHome,
-  FaLeaf,
   FaRunning,
+  FaShieldAlt,
+  FaShoppingBag,
+  FaStore,
+  FaTasks,
   FaTimes,
+  FaTrophy,
   FaUserFriends,
   FaUsers,
+  FaUserTie,
 } from "react-icons/fa";
 import UserAvatar from "./UserAvatar";
 import "./Sidebar.css";
 
 const SIDEBAR_USER_CACHE_KEY = "ecotrack_sidebar_user";
 
-const navigationItems = [
+const userNavigationItems = [
   { to: "/dashboard", label: "Dashboard", icon: FaHome },
-  { to: "/track", label: "Impact Tracking", mobileLabel: "Track", icon: FaLeaf },
   { to: "/activity", label: "Activities", icon: FaRunning },
   { to: "/history", label: "History", icon: FaClock },
   { to: "/communities", label: "Communities", icon: FaUsers },
+  { to: "/leaderboards", label: "Leaderboards", icon: FaTrophy },
+  { to: "/challenges", label: "Challenges", icon: FaTasks },
   { to: "/people", label: "People", icon: FaUserFriends },
   { to: "/messages", label: "Messages", icon: FaComments },
+  { to: "/orders", label: "My Orders", icon: FaShoppingBag, matchPrefix: "/orders" },
   { to: "/notifications", label: "Notifications", icon: FaBell },
   { to: "/settings", label: "Settings", icon: FaCog },
 ];
 
-const primaryMobileRoutes = ["/dashboard", "/track", "/activity", "/messages"];
+const sellerNavigationItems = [
+  { to: "/seller/dashboard", label: "Seller Dashboard", icon: FaStore },
+  { to: "/seller/products", label: "Seller Products", icon: FaBoxOpen },
+  { to: "/seller/orders", label: "Seller Orders", icon: FaClipboardList },
+  { to: "/seller/store-settings", label: "Store Settings", icon: FaCog },
+];
+
+const adminItems = [
+  { to: "/admin", label: "Admin Analytics", icon: FaChartBar },
+  { to: "/admin/seller-applications", label: "Seller Applications", icon: FaUserTie },
+  { to: "/admin/stores", label: "Stores", icon: FaStore },
+  { to: "/admin/marketplace-products", label: "Product Moderation", icon: FaShieldAlt },
+  { to: "/admin/challenges", label: "Challenges", icon: FaTasks },
+];
+
+const primaryMobileRoutes = ["/dashboard", "/activity", "/challenges", "/leaderboards", "/notifications"];
 
 export default function Sidebar() {
   const [user, setUser] = useState(() => {
@@ -128,6 +152,7 @@ export default function Sidebar() {
             SIDEBAR_USER_CACHE_KEY,
             JSON.stringify(freshUser)
           );
+          localStorage.setItem("user", JSON.stringify(freshUser));
         }
       } catch (err) {
         if (err.response?.status !== 429) {
@@ -204,18 +229,23 @@ export default function Sidebar() {
     user?.profile_picture ||
     user?.avatar ||
     null;
-  const profileLink = user?.id ? `/people?user=${user.id}` : "/people";
-  const allNavigationItems =
-    user?.role === "admin"
-      ? [
-          ...navigationItems,
-          { to: "/admin", label: "Admin Analytics", icon: FaChartBar },
-        ]
-      : navigationItems;
+  const profileLink = "/settings";
+  const isAdmin = user?.role === "admin" || user?.is_admin === true;
+  const hasActiveStore = Boolean(user?.active_store || user?.activeStore);
+  const groupedNavigationSections = [
+    { key: "user", label: "User", items: userNavigationItems, isPrimary: true },
+    ...(hasActiveStore
+      ? [{ key: "seller", label: "Seller", items: sellerNavigationItems }]
+      : []),
+    ...(isAdmin ? [{ key: "admin", label: "Admin", items: adminItems }] : []),
+  ];
+  const allNavigationItems = groupedNavigationSections.flatMap((section) => section.items);
 
   const renderNavigationLink = (item, className = "menu-item") => {
     const Icon = item.icon;
-    const isActive = location.pathname === item.to;
+    const isActive =
+      location.pathname === item.to ||
+      (item.matchPrefix && location.pathname.startsWith(item.matchPrefix));
     const isNotifications = item.to === "/notifications";
 
     return (
@@ -239,10 +269,27 @@ export default function Sidebar() {
     );
   };
 
+  const renderNavigationSection = (section, className = "menu-item") => (
+    <div
+      key={section.key}
+      className={`sidebar-section ${section.isPrimary ? "sidebar-section-primary" : ""}`}
+    >
+      {!section.isPrimary && (
+        <div className="sidebar-section-separator">
+          <span>{section.label}</span>
+          <i aria-hidden="true" />
+        </div>
+      )}
+      <div className="sidebar-section-links">
+        {section.items.map((item) => renderNavigationLink(item, className))}
+      </div>
+    </div>
+  );
+
   return (
     <>
       <aside className="sidebar">
-        <div className="sidebar-logo">
+        <Link to="/" className="sidebar-logo sidebar-logo-link">
           <div className="logo-circle">
             <img src="/ecotrack-logo.png" alt="EcoTrack logo" />
           </div>
@@ -250,16 +297,18 @@ export default function Sidebar() {
             <div className="logo-title">EcoTrack</div>
             <div className="logo-sub">Carbon Tracking</div>
           </div>
-        </div>
+        </Link>
 
         <nav className="sidebar-menu">
-          {allNavigationItems.map((item) => renderNavigationLink(item))}
+          {groupedNavigationSections.map((section) =>
+            renderNavigationSection(section)
+          )}
         </nav>
 
         <Link
           to={profileLink}
           className="sidebar-profile sidebar-profile-clickable"
-          title="View profile"
+          title="Settings"
         >
           <UserAvatar
             src={rawAvatar}
@@ -270,9 +319,9 @@ export default function Sidebar() {
           />
           <div className="sidebar-profile-text">
             <div className="profile-name">{user?.name || "User"}</div>
-            <div className="profile-email">{user?.email || "View profile"}</div>
+            <div className="profile-email">{user?.email || "Settings"}</div>
           </div>
-          <span className="sidebar-profile-view">View</span>
+          <span className="sidebar-profile-view">Settings</span>
         </Link>
       </aside>
 
@@ -315,10 +364,14 @@ export default function Sidebar() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mobile-drawer-header">
-              <div>
+              <Link
+                to="/"
+                className="mobile-drawer-logo"
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 <strong>EcoTrack</strong>
                 <span>Navigation</span>
-              </div>
+              </Link>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
@@ -343,14 +396,14 @@ export default function Sidebar() {
               <div className="sidebar-profile-text">
                 <div className="profile-name">{user?.name || "User"}</div>
                 <div className="profile-email">
-                  {user?.email || "View profile"}
+                  {user?.email || "Settings"}
                 </div>
               </div>
             </Link>
 
             <nav className="mobile-drawer-menu">
-              {allNavigationItems.map((item) =>
-                renderNavigationLink(item, "drawer-menu-item")
+              {groupedNavigationSections.map((section) =>
+                renderNavigationSection(section, "drawer-menu-item")
               )}
             </nav>
           </aside>

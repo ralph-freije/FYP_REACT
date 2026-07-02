@@ -7,7 +7,7 @@ const api = axios.create({
   },
 });
 
-// 🔥 AUTO TOKEN INJECTION
+// Attach Sanctum token to authenticated API calls.
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -21,13 +21,25 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 🔥 HANDLE AUTH ERRORS
+// When a backend token is expired/invalid, send the user to login but remember
+// the page they were trying to access. This is especially useful after
+// `php artisan migrate:fresh --seed`, because old browser tokens no longer exist
+// in the refreshed database.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.clear();
-      window.location.href = "/login";
+      const currentPath = `${window.location.pathname}${window.location.search}`;
+      const isLoginPage = window.location.pathname === "/login";
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("ecotrack_sidebar_user");
+
+      if (!isLoginPage) {
+        sessionStorage.setItem("ecotrack_login_redirect", currentPath);
+        window.location.href = `/login?expired=1&redirect=${encodeURIComponent(currentPath)}`;
+      }
     }
 
     return Promise.reject(error);

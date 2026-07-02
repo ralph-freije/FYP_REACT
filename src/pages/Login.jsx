@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { loginUser } from "../api/authApi";
 import "./Login.css";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -12,7 +13,10 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("expired") ? "Your session expired. Please sign in again to continue." : "";
+  });
 
   const handleGoogleLogin = () => {
     window.location.href = "http://localhost:8000/api/auth/google";
@@ -39,7 +43,16 @@ export default function Login() {
         JSON.stringify(data.data.user)
       );
 
-      navigate("/dashboard");
+      const params = new URLSearchParams(location.search);
+      const queryRedirect = params.get("redirect");
+      const savedRedirect = sessionStorage.getItem("ecotrack_login_redirect");
+      const stateRedirect = location.state?.from
+        ? `${location.state.from.pathname || ""}${location.state.from.search || ""}`
+        : "";
+      const redirectTo = queryRedirect || savedRedirect || stateRedirect || "/dashboard";
+
+      sessionStorage.removeItem("ecotrack_login_redirect");
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password.");
     } finally {

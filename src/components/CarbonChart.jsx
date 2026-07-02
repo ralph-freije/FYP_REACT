@@ -23,13 +23,13 @@ const centerTextPlugin = {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    ctx.font = "700 20px system-ui";
+    ctx.font = "800 30px system-ui";
     ctx.fillStyle = "#0f172a";
-    ctx.fillText(`${percentage}%`, centerX, centerY - 8);
+    ctx.fillText(`${percentage}%`, centerX, centerY - 10);
 
-    ctx.font = "600 10px system-ui";
+    ctx.font = "700 13px system-ui";
     ctx.fillStyle = "#94a3b8";
-    ctx.fillText("OF GOAL", centerX, centerY + 16);
+    ctx.fillText("ACTIVITY", centerX, centerY + 22);
 
     ctx.restore();
   },
@@ -42,7 +42,7 @@ export default function CarbonChart({ data, percentage }) {
       datasets: [
         {
           data: data,
-          backgroundColor: ["#57b12d", "#2f8fdd", "#1f8b3d", "#dbe4ef"],
+          backgroundColor: ["#10b981", "#3b82f6", "#94a3b8", "#f59e0b"],
           borderWidth: 0,
           hoverOffset: 4,
           borderRadius: 10,
@@ -55,7 +55,7 @@ export default function CarbonChart({ data, percentage }) {
 
   const options = useMemo(
     () => ({
-      cutout: "72%",
+      cutout: "74%",
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
@@ -72,7 +72,7 @@ export default function CarbonChart({ data, percentage }) {
   );
 
   return (
-    <div style={{ width: "190px", height: "190px" }}>
+    <div style={{ width: "280px", height: "280px" }}>
       <Doughnut
   data={chartData}
   options={{

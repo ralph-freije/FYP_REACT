@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import DashboardBackButton from "../components/DashboardBackButton";
 import InlineLoader from "../components/InlineLoader";
 import Avatar from "../components/UserAvatar";
 import { getProfile } from "../api/profileApi";
@@ -186,6 +187,7 @@ export default function People() {
       <Sidebar />
 
       <main className="people-main">
+        <DashboardBackButton />
         <div className="people-container">
           <div className="people-header">
             <div>

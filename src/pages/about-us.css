@@ -8,8 +8,8 @@
 
 .page {
   font-family: 'Manrope', sans-serif;
-  background: var(--color-background-tertiary);
-  color: var(--color-text-primary);
+  background: var(--color-background-tertiary, #f4f7f5);
+  color: var(--color-text-primary, #0f172a);
   width: 100%;
   overflow-x: hidden;
 }
@@ -42,7 +42,7 @@
   font-size: 16px;
   font-weight: 400;
   line-height: 1.7;
-  color: var(--color-text-secondary);
+  color: var(--color-text-secondary, #64748b);
 }
 
 .badges {
@@ -96,7 +96,7 @@
 
 /* Values */
 .values {
-  background: var(--color-background-primary);
+  background: var(--color-background-primary, #ffffff);
   padding: 72px 48px;
 }
 
@@ -113,7 +113,7 @@
 
 .sub {
   font-size: 14px;
-  color: var(--color-text-secondary);
+  color: var(--color-text-secondary, #64748b);
   margin-top: 10px;
   line-height: 1.6;
 }
@@ -127,8 +127,8 @@
 }
 
 .vcard {
-  background: var(--color-background-secondary);
-  border: 0.5px solid var(--color-border-tertiary);
+  background: var(--color-background-secondary, #ffffff);
+  border: 0.5px solid var(--color-border-tertiary, #e5e7eb);
   border-radius: 12px;
   padding: 28px 24px;
   transition: transform 0.2s;
@@ -157,7 +157,7 @@
 
 .vcard-desc {
   font-size: 13px;
-  color: var(--color-text-secondary);
+  color: var(--color-text-secondary, #64748b);
   line-height: 1.6;
 }
 
@@ -213,7 +213,7 @@
 
 .tcard-bio {
   font-size: 13px;
-  color: var(--color-text-secondary);
+  color: var(--color-text-secondary, #64748b);
   line-height: 1.6;
 }
 

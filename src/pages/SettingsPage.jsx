@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/Sidebar";
+import DashboardBackButton from "../components/DashboardBackButton";
 import InlineLoader from "../components/InlineLoader";
 import { getProfile, updateProfile, uploadAvatar } from "../api/profileApi";
 import "./SettingsPage.css";
@@ -193,6 +194,7 @@ export default function SettingsPage() {
       <Sidebar />
 
       <main className="settings-main">
+        <DashboardBackButton />
         {!profile ? (
           <InlineLoader
             text="Loading settings..."

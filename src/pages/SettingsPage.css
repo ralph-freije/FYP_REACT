@@ -5,9 +5,9 @@
 }
 
 .settings-main {
-  margin-left: 260px;
+  margin-left: 280px;
   padding: 32px 36px;
-  width: calc(100% - 260px);
+  width: calc(100% - 280px);
   min-height: 100vh;
   box-sizing: border-box;
 }

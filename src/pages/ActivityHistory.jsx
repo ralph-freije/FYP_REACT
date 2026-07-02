@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../api/axios";
 import Sidebar from "../components/Sidebar";
+import DashboardBackButton from "../components/DashboardBackButton";
 import "./ActivityHistory.css";
 import { useNavigate } from "react-router-dom";
 import {
@@ -286,6 +287,7 @@ export default function ActivityHistory() {
       <Sidebar />
 
       <div className="dashboard-main">
+        <DashboardBackButton />
         <div className="history-container">
           <div className="history-header">
             <div>

@@ -1,8 +1,8 @@
 import Sidebar from "../components/Sidebar";
-import CarbonChart from "../components/CarbonChart";
+import DashboardBackButton from "../components/DashboardBackButton";
 import { useEffect, useState } from "react";
 import { getDashboard } from "../api/dashboardApi";
-import { createGoal, deleteGoal } from "../api/goalApi";
+import { createGoal, deleteGoal, suggestGoalDetails } from "../api/goalApi";
 import { useNavigate } from "react-router-dom";
 import {
   FaCarSide,
@@ -14,6 +14,18 @@ import {
   FaTrash,
   FaTimes,
   FaBullseye,
+  FaTrophy,
+  FaStar,
+  FaMedal,
+  FaCalendarDay,
+  FaCalendarWeek,
+  FaHistory,
+  FaCoins,
+  FaMagic,
+  FaChartLine,
+  FaUsers,
+  FaFire,
+  FaTasks,
 } from "react-icons/fa";
 import "./Dashboard.css";
 import { getMe } from "../api/authApi";
@@ -28,6 +40,7 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import InlineLoader from "../components/InlineLoader";
+import UserAvatar from "../components/UserAvatar";
 
 ChartJS.register(
   LineElement,
@@ -55,21 +68,69 @@ export default function Dashboard() {
     trend: [],
     recent_activities: [],
     goals: [],
+    game_profile: {
+      total_score: 0,
+      level: 1,
+      current_level_score: 0,
+      next_level_score: 500,
+      level_progress: 0,
+      total_completed_goals: 0,
+      total_completed_challenges: 0,
+      recent_score_history: [],
+    },
+    mini_leaderboards: {
+      users: [],
+      communities: [],
+    },
+    challenge_stats: {
+      completed_today: 0,
+      completed_week: 0,
+      completed_month: 0,
+      completed_total: 0,
+      challenge_score: 0,
+      streak_days: 0,
+      next_multiplier: 1,
+    },
   });
 
   const [goalFormOpen, setGoalFormOpen] = useState(false);
   const [goalTitle, setGoalTitle] = useState("");
-  const [goalCategory, setGoalCategory] = useState("carbon");
+  const [goalDescription, setGoalDescription] = useState("");
+  const [goalCategory, setGoalCategory] = useState("");
   const [goalTarget, setGoalTarget] = useState("");
-  const [goalDeadline, setGoalDeadline] = useState("");
   const [goalError, setGoalError] = useState("");
   const [goalLoading, setGoalLoading] = useState(false);
+  const [goalAiFilling, setGoalAiFilling] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
 
   const navigate = useNavigate();
+
+  const getGoalErrorMessage = (err, fallback = "Failed to create goal.") => {
+    const data = err?.response?.data;
+
+    if (data?.errors) {
+      const firstError = Object.values(data.errors)
+        .flat()
+        .filter(Boolean)[0];
+
+      if (firstError) return firstError;
+    }
+
+    if (data?.message) {
+      const similarTitle = data?.similar_goal_title || data?.similar_goal?.title;
+
+      if (similarTitle && !data.message.includes(similarTitle)) {
+        return `${data.message} Similar goal: ${similarTitle}.`;
+      }
+
+      return data.message;
+    }
+
+    return fallback;
+  };
 
   const categories = dashboard?.categories || {
     transport: 0,
@@ -85,12 +146,31 @@ export default function Dashboard() {
     all: 0,
   };
 
-  const chartData = [
-    Number(categories.transport || 0),
-    Number(categories.diet || 0),
-    Number(categories.energy || 0),
-    Number(categories.shopping || 0),
-  ];
+  const gameProfile = dashboard?.game_profile || {
+    total_score: 0,
+    level: 1,
+    current_level_score: 0,
+    next_level_score: 500,
+    level_progress: 0,
+    total_completed_goals: 0,
+    total_completed_challenges: 0,
+    recent_score_history: [],
+  };
+
+  const miniLeaderboards = dashboard?.mini_leaderboards || {
+    users: [],
+    communities: [],
+  };
+
+  const challengeStats = dashboard?.challenge_stats || {
+    completed_today: 0,
+    completed_week: 0,
+    completed_month: 0,
+    completed_total: 0,
+    challenge_score: 0,
+    streak_days: 0,
+    next_multiplier: 1,
+  };
 
   const trendData = {
     labels: dashboard?.trend?.map((t) => t.date) || [],
@@ -132,13 +212,94 @@ export default function Dashboard() {
     },
   };
 
-  const monthlyGoal = 15;
   const totalMonth = Number(totals.month || 0);
+  const playerName = user?.name || user?.username || user?.email?.split("@")[0] || "Eco Hero";
+  const playerPhoto =
+    user?.profile_picture ||
+    user?.profile?.profile_picture ||
+    user?.avatar ||
+    user?.profile?.avatar ||
+    null;
 
-  const percentage = Math.min(
-    Math.round((totalMonth / monthlyGoal) * 100),
-    100
-  );
+  const skillRows = [
+    {
+      key: "transport",
+      label: "Transport",
+      icon: <FaCarSide />,
+      value: Number(categories.transport || 0),
+      rank: "Mobility",
+    },
+    {
+      key: "diet",
+      label: "Diet",
+      icon: <FaUtensils />,
+      value: Number(categories.diet || 0),
+      rank: "Nutrition",
+    },
+    {
+      key: "energy",
+      label: "Energy",
+      icon: <FaBolt />,
+      value: Number(categories.energy || 0),
+      rank: "Power",
+    },
+    {
+      key: "shopping",
+      label: "Shopping",
+      icon: <FaShoppingBag />,
+      value: Number(categories.shopping || 0),
+      rank: "Items",
+    },
+  ];
+
+  const maxSkillValue = Math.max(...skillRows.map((skill) => skill.value), 1);
+
+  const statusRows = [
+    {
+      key: "month",
+      label: "Month CO₂",
+      value: `${totalMonth.toFixed(2)} kg`,
+      note: "Live monthly total",
+      icon: <FaChartLine />,
+      tone: "accent",
+    },
+    {
+      key: "today",
+      label: "Today",
+      value: `${Number(totals.today || 0).toFixed(2)} kg`,
+      note: "Current day",
+      icon: <FaCalendarDay />,
+    },
+    {
+      key: "week",
+      label: "This Week",
+      value: `${Number(totals.week || 0).toFixed(2)} kg`,
+      note: "Weekly impact",
+      icon: <FaCalendarWeek />,
+    },
+    {
+      key: "all",
+      label: "All Time",
+      value: `${Number(totals.all || 0).toFixed(2)} kg`,
+      note: "Total tracked",
+      icon: <FaHistory />,
+    },
+    {
+      key: "goals",
+      label: "Goals",
+      value: Number(gameProfile.total_completed_goals || 0).toLocaleString(),
+      note: "Completed",
+      icon: <FaBullseye />,
+    },
+    {
+      key: "quests",
+      label: "Quests",
+      value: Number(gameProfile.total_completed_challenges || 0).toLocaleString(),
+      note: "Completed",
+      icon: <FaTasks />,
+      tone: "quest",
+    },
+  ];
 
   const loadDashboard = async () => {
     try {
@@ -159,7 +320,30 @@ export default function Dashboard() {
         },
         trend: res.data?.trend || [],
         recent_activities: res.data?.recent_activities || [],
-        goals: res.data?.goals || [],
+        goals: res.data?.personal_goals || res.data?.goals || [],
+        game_profile: res.data?.game_profile || {
+          total_score: 0,
+          level: 1,
+          current_level_score: 0,
+          next_level_score: 500,
+          level_progress: 0,
+          total_completed_goals: 0,
+          total_completed_challenges: 0,
+          recent_score_history: [],
+        },
+        mini_leaderboards: res.data?.mini_leaderboards || {
+          users: [],
+          communities: [],
+        },
+        challenge_stats: res.data?.challenge_stats || {
+          completed_today: 0,
+          completed_week: 0,
+          completed_month: 0,
+          completed_total: 0,
+          challenge_score: 0,
+          streak_days: 0,
+          next_multiplier: 1,
+        },
       });
     } catch (err) {
       console.error(err);
@@ -190,9 +374,9 @@ export default function Dashboard() {
 
   const resetGoalForm = () => {
     setGoalTitle("");
-    setGoalCategory("carbon");
+    setGoalDescription("");
+    setGoalCategory("");
     setGoalTarget("");
-    setGoalDeadline("");
     setGoalError("");
   };
 
@@ -204,10 +388,6 @@ export default function Dashboard() {
       return;
     }
 
-    if (!goalTarget || Number(goalTarget) <= 0) {
-      setGoalError("Please enter a valid target value.");
-      return;
-    }
 
     try {
       setGoalLoading(true);
@@ -215,10 +395,9 @@ export default function Dashboard() {
 
       await createGoal({
         title: goalTitle.trim(),
-        category: goalCategory,
-        target_value: Number(goalTarget),
-        unit: "kg CO2e",
-        deadline: goalDeadline || null,
+        description: goalDescription.trim() || null,
+        category: goalCategory || null,
+        target: goalTarget.trim() || null,
       });
 
       resetGoalForm();
@@ -226,9 +405,35 @@ export default function Dashboard() {
       await loadDashboard();
     } catch (err) {
       console.error(err);
-      setGoalError(err.response?.data?.message || "Failed to create goal.");
+      setGoalFormOpen(true);
+      setGoalError(getGoalErrorMessage(err, "Failed to create goal."));
     } finally {
       setGoalLoading(false);
+    }
+  };
+
+  const handleFillGoalWithAi = async () => {
+    if (!goalTitle.trim()) {
+      setGoalError("Write a goal title first, then AI can fill the rest.");
+      return;
+    }
+
+    try {
+      setGoalAiFilling(true);
+      setGoalError("");
+
+      const suggestion = await suggestGoalDetails({
+        title: goalTitle.trim(),
+      });
+
+      setGoalDescription(suggestion.description || "");
+      setGoalCategory(suggestion.category || "custom");
+      setGoalTarget(suggestion.target || "");
+    } catch (err) {
+      console.error(err);
+      setGoalError(getGoalErrorMessage(err, "AI could not fill the goal details."));
+    } finally {
+      setGoalAiFilling(false);
     }
   };
 
@@ -243,7 +448,7 @@ export default function Dashboard() {
       await loadDashboard();
     } catch (err) {
       console.error(err);
-      setGoalError("Failed to delete goal.");
+      alert("Failed to delete goal.");
     } finally {
       setGoalLoading(false);
     }
@@ -254,6 +459,7 @@ export default function Dashboard() {
       <Sidebar />
 
       <div className="dashboard-main">
+        <DashboardBackButton />
         <div className="dashboard-container">
           {loading ? (
             <InlineLoader
@@ -271,7 +477,6 @@ export default function Dashboard() {
                 </div>
 
                 <div className="header-actions">
-                  <button className="btn-light">This Month</button>
                   <button
                     className="btn-green"
                     onClick={() => navigate("/activity")}
@@ -281,95 +486,170 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="top-grid">
-                <div className="main-card">
-                  <div className="card-header">
-                    <div>
-                      <h3>Carbon Footprint</h3>
-                      <span className="subtle-text">
-                        Monthly overview of CO2 emission
-                      </span>
+              <div className="top-grid dashboard-hero-grid">
+                <div className="jrpg-status-card">
+                  <div className="jrpg-card-top">
+                    <div className="jrpg-title-block">
+                      <span className="jrpg-kicker"><FaStar /> EcoTrack Status</span>
+                      <h3>Level {Number(gameProfile.level || 1)} {playerName}</h3>
+                      <p>Final Fantasy style status for your carbon, score, streak, goals, and daily quests.</p>
                     </div>
-
-                    <div className="carbon-value">
-                      <div className="carbon-number">
-                        <strong>{totalMonth.toFixed(2)}</strong>{" "}
-                        <span>kg CO2e</span>
-                      </div>
-                      <div className="change-pill">Live monthly data</div>
+                    <div className="jrpg-rank-badge">
+                      <FaMedal />
+                      <span>EcoScore</span>
+                      <strong>{Number(gameProfile.total_score || 0).toLocaleString()}</strong>
                     </div>
                   </div>
 
-                  <div className="chart-section">
-                    <div className="chart-wrapper">
-                      <CarbonChart data={chartData} percentage={percentage} />
+                  <div className="jrpg-main-row">
+                    <div className="jrpg-avatar-frame">
+                      <UserAvatar
+                        src={playerPhoto}
+                        name={playerName}
+                        className="jrpg-user-avatar"
+                        imageClassName="jrpg-user-avatar-image"
+                        fallbackClassName="jrpg-user-avatar-fallback"
+                      />
+                      <span>{playerName}</span>
                     </div>
 
-                    <div className="legend">
-                      <div className="legend-item">
-                        <span className="legend-dot dot-green"></span>
-                        <span>Transport</span>
-                        <strong>
-                          {Number(categories.transport || 0).toFixed(2)} kg
-                        </strong>
+                    <div className="jrpg-bars">
+                      <div className="jrpg-bar-head">
+                        <span>XP to next level</span>
+                        <strong>{Math.min(100, Number(gameProfile.level_progress || 0))}%</strong>
                       </div>
-
-                      <div className="legend-item">
-                        <span className="legend-dot dot-blue"></span>
-                        <span>Diet</span>
-                        <strong>
-                          {Number(categories.diet || 0).toFixed(2)} kg
-                        </strong>
+                      <div className="jrpg-xp-bar">
+                        <div style={{ width: `${Math.min(100, Number(gameProfile.level_progress || 0))}%` }}></div>
                       </div>
-
-                      <div className="legend-item">
-                        <span className="legend-dot dot-gray"></span>
-                        <span>Energy</span>
-                        <strong>
-                          {Number(categories.energy || 0).toFixed(2)} kg
-                        </strong>
-                      </div>
-
-                      <div className="legend-item">
-                        <span className="legend-dot dot-yellow"></span>
-                        <span>Shopping</span>
-                        <strong>
-                          {Number(categories.shopping || 0).toFixed(2)} kg
-                        </strong>
+                      <div className="jrpg-xp-meta">
+                        <span>{Number(gameProfile.current_level_score || gameProfile.total_score || 0).toLocaleString()} pts</span>
+                        <strong>{Number(gameProfile.next_level_score || 500).toLocaleString()} pts</strong>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="jrpg-stat-menu" aria-label="EcoTrack status values">
+                    <div className="jrpg-stat-menu-head">
+                      <span>Status Window</span>
+                      <strong>Core stats</strong>
+                    </div>
+
+                    <div className="jrpg-stat-list">
+                      {statusRows.map((stat) => (
+                        <div className={`jrpg-stat-line ${stat.tone || ""}`} key={stat.key}>
+                          <div className="jrpg-stat-label">
+                            <i>{stat.icon}</i>
+                            <div>
+                              <span>{stat.label}</span>
+                              <small>{stat.note}</small>
+                            </div>
+                          </div>
+                          <strong>{stat.value}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="jrpg-skills-panel">
+                    <div className="jrpg-skills-header">
+                      <span>Skills</span>
+                      <strong>Carbon classes</strong>
+                    </div>
+                    <div className="jrpg-skills-list">
+                      {skillRows.map((skill) => {
+                        const fill = Math.min(100, Math.max(8, (skill.value / maxSkillValue) * 100));
+
+                        return (
+                          <div className="jrpg-skill-row" key={skill.key}>
+                            <div className="jrpg-skill-name">
+                              <i>{skill.icon}</i>
+                              <div>
+                                <span>{skill.label}</span>
+                                <small>{skill.rank}</small>
+                              </div>
+                            </div>
+                            <div className="jrpg-skill-meter">
+                              <div style={{ width: `${fill}%` }}></div>
+                            </div>
+                            <strong>{skill.value.toFixed(2)} kg</strong>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="jrpg-actions">
+                    <button type="button" onClick={() => navigate("/activity")}>+ Log Activity</button>
+                    <button type="button" onClick={() => navigate("/challenges")}>Open Daily Quests</button>
                   </div>
                 </div>
 
-                <div className="stats-column">
-                  <div className="stat-card">
-                    <div className="stat-icon green-bg">
-                      <FaCarSide />
+                <div className="stats-column compact-side-column">
+                  <div className="dashboard-card challenge-stats-card compact-card">
+                    <div className="challenge-stats-card-head">
+                      <div className="stat-icon green-bg">
+                        <FaTasks />
+                      </div>
+                      <div>
+                        <p>Daily Challenges</p>
+                        <h3>{Number(challengeStats.completed_today || 0)}/5 today</h3>
+                      </div>
                     </div>
-                    <div>
-                      <p>Today</p>
-                      <h3>{Number(totals.today || 0).toFixed(2)} kg</h3>
+                    <div className="challenge-stats-grid compact-stats-grid">
+                      <span><strong>{Number(challengeStats.completed_week || 0)}</strong> week</span>
+                      <span><strong>{Number(challengeStats.completed_total || 0)}</strong> total</span>
+                      <span><strong>{Number(challengeStats.challenge_score || 0).toLocaleString()}</strong> score</span>
+                      <span><strong>x{Number(challengeStats.next_multiplier || 1).toFixed(2)}</strong> next</span>
                     </div>
+                    <button type="button" className="challenge-dashboard-link" onClick={() => navigate("/challenges")}>
+                      <FaFire /> {Number(challengeStats.streak_days || 0)} day streak · Open challenges
+                    </button>
                   </div>
 
-                  <div className="stat-card">
-                    <div className="stat-icon blue-bg">
-                      <FaBolt />
+                  <div className="dashboard-card mini-leaderboard-card compact-card">
+                    <div className="mini-leaderboard-header">
+                      <div>
+                        <p>Live ranking</p>
+                        <h3><FaTrophy /> Mini Leaderboard</h3>
+                      </div>
+                      <button type="button" onClick={() => navigate("/leaderboards")}>View all</button>
                     </div>
-                    <div>
-                      <p>This Week</p>
-                      <h3>{Number(totals.week || 0).toFixed(2)} kg</h3>
-                    </div>
-                  </div>
 
-                  <div className="stat-card">
-                    <div className="stat-icon yellow-bg">
-                      <FaShoppingBag />
+                    <div className="mini-leaderboard-tabs">
+                      <span><FaUsers /> Users</span>
+                      <strong>{miniLeaderboards.users?.[0]?.name || "No score yet"}</strong>
                     </div>
-                    <div>
-                      <p>All Time</p>
-                      <h3>{Number(totals.all || 0).toFixed(2)} kg</h3>
+
+                    <div className="mini-leaderboard-list">
+                      {(miniLeaderboards.users || []).slice(0, 3).length > 0 ? (
+                        (miniLeaderboards.users || []).slice(0, 3).map((rankedUser) => (
+                          <div className="mini-leaderboard-row" key={`user-${rankedUser.user_id}`}>
+                            <span className="mini-rank">#{rankedUser.rank}</span>
+                            <UserAvatar
+                              src={rankedUser.profile_picture}
+                              name={rankedUser.name}
+                              className="mini-leaderboard-avatar"
+                            />
+                            <div>
+                              <strong>{rankedUser.name}</strong>
+                              <small>Level {rankedUser.level || 1}</small>
+                            </div>
+                            <b>{Number(rankedUser.total_score || 0).toLocaleString()}</b>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="mini-leaderboard-empty">Complete a goal to enter the ranking.</div>
+                      )}
                     </div>
+
+                    {(miniLeaderboards.communities || []).slice(0, 1).map((community) => (
+                      <div className="mini-community-winner" key={`community-${community.community_id}`}>
+                        <FaChartLine />
+                        <span>Top community</span>
+                        <strong>{community.name}</strong>
+                        <b>{Number(community.total_score || 0).toLocaleString()} pts</b>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -431,66 +711,117 @@ export default function Dashboard() {
                   </button>
                 </div>
 
-                {goalError && <div className="goal-error">{goalError}</div>}
-
                 {goalFormOpen && (
-                  <form className="goal-form" onSubmit={handleCreateGoal}>
-                    <div className="goal-form-header">
-                      <h4>New goal</h4>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setGoalFormOpen(false);
-                          resetGoalForm();
-                        }}
-                      >
-                        <FaTimes />
-                      </button>
-                    </div>
+                  <div className="goal-modal-backdrop" role="dialog" aria-modal="true">
+                    <form className="goal-modal" onSubmit={handleCreateGoal}>
+                      <div className="goal-form-header">
+                        <div>
+                          <span className="ai-check-pill"><FaMagic /> Create goal</span>
+                          <h4>Create personal goal</h4>
+                          <p>Write only the title, then AI can fill the description, category, and target while estimating the score reward.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGoalFormOpen(false);
+                            resetGoalForm();
+                          }}
+                          aria-label="Close goal modal"
+                        >
+                          <FaTimes />
+                        </button>
+                      </div>
 
-                    <div className="goal-form-grid">
-                      <input
-                        type="text"
-                        value={goalTitle}
-                        onChange={(e) => setGoalTitle(e.target.value)}
-                        placeholder="Goal title"
-                      />
+                      {goalError && (
+                        <div className="goal-error goal-modal-error">
+                          {goalError}
+                        </div>
+                      )}
 
-                      <select
-                        value={goalCategory}
-                        onChange={(e) => setGoalCategory(e.target.value)}
-                      >
-                        <option value="carbon">Carbon</option>
-                        <option value="transport">Transport</option>
-                        <option value="diet">Diet</option>
-                        <option value="energy">Energy</option>
-                        <option value="shopping">Shopping</option>
-                      </select>
+                      <div className="goal-form-stack">
+                        <label>
+                          <span className="goal-title-label-row">
+                            Goal title
+                            <button
+                              type="button"
+                              className="ai-fill-goal-btn"
+                              onClick={handleFillGoalWithAi}
+                              disabled={goalAiFilling || goalLoading || !goalTitle.trim()}
+                            >
+                              <FaMagic /> {goalAiFilling ? "Filling..." : "Fill by AI"}
+                            </button>
+                          </span>
+                          <input
+                            type="text"
+                            value={goalTitle}
+                            onChange={(e) => setGoalTitle(e.target.value)}
+                            placeholder="Example: Walk instead of using the car"
+                          />
+                        </label>
 
-                      <input
-                        type="number"
-                        min="1"
-                        step="0.1"
-                        value={goalTarget}
-                        onChange={(e) => setGoalTarget(e.target.value)}
-                        placeholder="Target value"
-                      />
+                        <label>
+                          Description
+                          <textarea
+                            value={goalDescription}
+                            onChange={(e) => setGoalDescription(e.target.value)}
+                            placeholder="Explain what you want to do and why it matters."
+                            rows="3"
+                          />
+                        </label>
 
-                      <input
-                        type="date"
-                        value={goalDeadline}
-                        onChange={(e) => setGoalDeadline(e.target.value)}
-                      />
-                    </div>
+                        <div className="goal-form-grid personal-goal-grid">
+                          <label>
+                            Category
+                            <select
+                              value={goalCategory}
+                              onChange={(e) => setGoalCategory(e.target.value)}
+                            >
+                              <option value="">AI chooses</option>
+                              <option value="transport">Transport</option>
+                              <option value="diet">Diet</option>
+                              <option value="energy">Energy</option>
+                              <option value="shopping">Shopping</option>
+                              <option value="waste">Waste</option>
+                              <option value="water">Water</option>
+                              <option value="reuse">Reuse</option>
+                              <option value="carbon">Carbon</option>
+                              <option value="custom">Custom</option>
+                            </select>
+                          </label>
 
-                    <button
-                      className="goal-save-btn"
-                      type="submit"
-                      disabled={goalLoading}
-                    >
-                      {goalLoading ? "Saving..." : "Save Goal"}
-                    </button>
-                  </form>
+                          <label>
+                            Target
+                            <input
+                              type="text"
+                              value={goalTarget}
+                              onChange={(e) => setGoalTarget(e.target.value)}
+                              placeholder="Example: Complete 8 low-carbon activities"
+                            />
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="goal-modal-actions">
+                        <button
+                          type="button"
+                          className="goal-cancel-btn"
+                          onClick={() => {
+                            setGoalFormOpen(false);
+                            resetGoalForm();
+                          }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          className="goal-save-btn"
+                          type="submit"
+                          disabled={goalLoading}
+                        >
+                          {goalLoading ? "Creating..." : "Create Goal"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
                 )}
 
                 {dashboard.goals.length === 0 ? (
@@ -498,14 +829,14 @@ export default function Dashboard() {
                     <FaBullseye />
                     <h4>No goals yet</h4>
                     <p>
-                      Add a monthly carbon goal and EcoTrack will track your progress.
+                      Add a title and let EcoTrack AI fill the details and reward.
                     </p>
                   </div>
                 ) : (
                   <div className="goals-list">
                     {dashboard.goals.map((goal) => {
                       const goalPercentage = Math.min(
-                        Math.round(Number(goal.progress_percentage || 0)),
+                        Math.round(Number(goal.progress || goal.progress_percentage || 0)),
                         100
                       );
 
@@ -532,12 +863,22 @@ export default function Dashboard() {
                             </button>
                           </div>
 
+                          {goal.description && <p className="goal-description">{goal.description}</p>}
+
+                          <div className="goal-reward-row">
+                            <span className={`difficulty-badge ${goal.ai_difficulty || "medium"}`}>
+                              {goal.ai_difficulty || "medium"}
+                            </span>
+                            <strong className="score-reward-badge"><FaCoins /> {Number(goal.score_reward || 0)} pts</strong>
+                          </div>
+
+                          <div className="goal-target-box">
+                            <span>Target</span>
+                            <strong>{goal.target || "Personal progress"}</strong>
+                          </div>
+
                           <div className="goal-progress-row">
-                            <p>
-                              {Number(goal.current_value || 0).toFixed(2)} /{" "}
-                              {Number(goal.target_value || 0).toFixed(2)}{" "}
-                              {goal.unit || "kg CO2e"}
-                            </p>
+                            <p>Progress</p>
                             <strong>{goalPercentage}%</strong>
                           </div>
 
@@ -545,19 +886,13 @@ export default function Dashboard() {
                             <div style={{ width: `${goalPercentage}%` }}></div>
                           </div>
 
-                          <div className="goal-footer">
-                            <span>
-                              {goal.deadline
-                                ? `Deadline: ${goal.deadline}`
-                                : "No deadline"}
-                            </span>
-
-                            {goal.is_completed && (
+                          {goal.is_completed && (
+                            <div className="goal-footer">
                               <strong className="goal-completed-badge">
                                 Completed
                               </strong>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -590,14 +925,14 @@ export default function Dashboard() {
                           </div>
 
                           <div>
-                            <h4>{activity.title}</h4>
+                            <h4>{activity.title || `${activity.category || "Activity"} activity`}</h4>
                             <p>
                               {activity.category} •{" "}
                               {Number(activity.carbon_value || 0).toFixed(2)} kg
                             </p>
                           </div>
 
-                          <span>{activity.activity_date}</span>
+                          <span>{activity.activity_date || activity.created_at}</span>
                         </div>
                       ))
                     ) : (

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import DashboardBackButton from "../components/DashboardBackButton";
 import InlineLoader from "../components/InlineLoader";
 import UserAvatar from "../components/UserAvatar";
 import {
@@ -24,6 +26,7 @@ import {
 import "./Messages.css";
 
 export default function Messages() {
+  const [searchParams] = useSearchParams();
   const [conversations, setConversations] = useState([]);
   const [mutualUsers, setMutualUsers] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -36,8 +39,11 @@ export default function Messages() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [openedConversationFromUrl, setOpenedConversationFromUrl] = useState(null);
 
   const selectedOtherUser = selectedConversation?.other_user;
+  const requestedConversationId = searchParams.get("conversation");
+  const requestedDraft = searchParams.get("draft");
 
   const sortedConversations = useMemo(() => {
     return [...conversations].sort((a, b) => {
@@ -117,6 +123,32 @@ export default function Messages() {
   useEffect(() => {
     loadAll();
   }, []);
+
+  useEffect(() => {
+    if (loading || !requestedConversationId) return;
+    if (openedConversationFromUrl === requestedConversationId) return;
+
+    const conversation = conversations.find(
+      (item) => String(item.id) === String(requestedConversationId)
+    );
+
+    if (!conversation) return;
+
+    setOpenedConversationFromUrl(requestedConversationId);
+    setSelectedConversation(conversation);
+
+    if (requestedDraft && !newMessage.trim()) {
+      setNewMessage(requestedDraft);
+    }
+
+    loadMessages(conversation.id);
+  }, [
+    loading,
+    conversations,
+    requestedConversationId,
+    requestedDraft,
+    openedConversationFromUrl,
+  ]);
 
   useEffect(() => {
     if (!selectedConversation?.id) return;
@@ -248,11 +280,12 @@ export default function Messages() {
       <Sidebar />
 
       <main className="messages-main">
+        <DashboardBackButton />
         <div className="messages-container">
           <div className="messages-header">
             <div>
               <h1>Messages</h1>
-              <p>Private conversations between users who follow each other.</p>
+              <p>Private conversations with mutual followers and marketplace sellers.</p>
             </div>
           </div>
 
@@ -341,7 +374,7 @@ export default function Messages() {
                       <FaUserFriends />
                       <div>
                         <h3>Start New Chat</h3>
-                        <p>Only mutual followers appear here</p>
+                        <p>Mutual followers appear here</p>
                       </div>
                     </div>
 
@@ -364,7 +397,7 @@ export default function Messages() {
                     <div className="mutual-list">
                       {mutualUsers.length === 0 && (
                         <p className="empty-text">
-                          No mutual followers found. Follow each other first.
+                          No mutual followers found. Marketplace seller chats open from store pages.
                         </p>
                       )}
 
@@ -400,8 +433,7 @@ export default function Messages() {
                       <FaComments />
                       <h3>Select a chat</h3>
                       <p>
-                        Choose an existing conversation or start a new one with a
-                        mutual follower.
+                        Choose an existing conversation or contact a seller from their public store page.
                       </p>
                     </div>
                   ) : (
@@ -451,7 +483,7 @@ export default function Messages() {
                               className={`dm-message-row ${
                                 message.is_mine ? "mine" : "theirs"
                               } ${
-                                message.type === "achievement"
+                                message.type === "achievement" || message.type === "challenge_share"
                                   ? "achievement"
                                   : ""
                               }`}
@@ -490,6 +522,21 @@ export default function Messages() {
                                           ?.activities_count || 0}{" "}
                                         activities logged
                                       </span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {message.type === "challenge_share" && (
+                                  <div className="dm-challenge-share-box">
+                                    {message.achievement_data?.proof_image_url ? (
+                                      <img src={message.achievement_data.proof_image_url} alt={message.achievement_data?.title || "Challenge proof"} />
+                                    ) : (
+                                      <FaLeaf />
+                                    )}
+                                    <div>
+                                      <strong>{message.achievement_data?.title || "Completed challenge"}</strong>
+                                      <span>{message.achievement_data?.description || "Eco challenge completed."}</span>
+                                      <em>+{message.achievement_data?.score_awarded || 0} score · x{Number(message.achievement_data?.streak_multiplier || 1).toFixed(2)}</em>
                                     </div>
                                   </div>
                                 )}
